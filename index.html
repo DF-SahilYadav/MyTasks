@@ -318,31 +318,41 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   cursor:text;
 }
 .tarrow{
-  width:26px;height:26px;
+  width:32px;height:32px;
   display:inline-flex;align-items:center;justify-content:center;
   flex-shrink:0;margin-top:1px;
   cursor:pointer;
   transition:transform var(--fade) var(--ease);
-  border-radius:3px;
+  border-radius:4px;
+  position:relative;
 }
 .tarrow:hover{background:var(--hover-2)}
+.tarrow.open{transform:rotate(90deg)}
 .tarrow::before{
   content:'';
-  width:13px;height:15px;
-  transition:background var(--fade) var(--ease);
+  display:block;
+  width:0;height:0;
+  border-top:6px solid transparent;
+  border-bottom:6px solid transparent;
+  border-left:10px solid var(--text-4);
+  border-right:0;
+  transition:border-left-color var(--fade) var(--ease);
 }
-.tarrow.has-notes::before{
-  background:var(--text-2);
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpolygon points='0,0 10,6 0,12' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpolygon points='0,0 10,6 0,12' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;
+.tarrow.has-notes::before{border-left-color:var(--text-2)}
+.tarrow:hover::before{border-left-color:var(--text-2)}
+.tarrow.empty::after{
+  content:'';
+  position:absolute;
+  width:0;height:0;
+  border-top:3.5px solid transparent;
+  border-bottom:3.5px solid transparent;
+  border-left:5.5px solid var(--bg);
+  border-right:0;
+  margin-left:3px;
+  transition:border-left-color var(--fade) var(--ease);
 }
-.tarrow.empty::before{
-  background:var(--text-4);
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpolygon points='1,1 11,7 1,13' fill='none' stroke='black' stroke-width='2.5'/%3E%3C/svg%3E") center/contain no-repeat;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpolygon points='1,1 11,7 1,13' fill='none' stroke='black' stroke-width='2.5'/%3E%3C/svg%3E") center/contain no-repeat;
-}
-.tarrow:hover::before{background:var(--text-2)}
-.tarrow.open{transform:rotate(90deg)}
+.tarrow:hover.empty::after{border-left-color:var(--hover-2)}
+.tarrow.open.empty::after{margin-left:0;margin-top:3px}
 
 .tcb{
   width:15px;height:15px;border-radius:3px;
