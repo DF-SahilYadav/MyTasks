@@ -283,6 +283,10 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
 }
 .ti.stale .tname{color:var(--danger)}
 .ti.stale .tname.done{color:var(--text-3)}
+.ti.selected{background:var(--hover-2);box-shadow:inset 0 0 0 1.5px var(--text-4)}
+#sel-rect{position:fixed;pointer-events:none;z-index:9999;display:none;border-radius:3px;
+  background:rgba(42,39,36,.05);border:1.5px solid rgba(42,39,36,.22)}
+.dark #sel-rect{background:rgba(235,230,218,.06);border-color:rgba(235,230,218,.25)}
 
 /* Left-side hover handles — drag + add-below */
 .ti-handles{
@@ -2953,7 +2957,18 @@ document.addEventListener('keydown', e => {
     if(helpBg.classList.contains('show')){ helpBg.classList.remove('show'); return; }
     if(activeFilter){ setActiveFilter(null); return; }
     if(searchBar.classList.contains('show')){ toggleSearch(); return; }
+    if(selectedIds.size){ clearSelection(); return; }
     if(kbdFocusedId){ kbdFocusedId = null; kbdFocusedQ = null; highlightKbdFocused(); return; }
+  }
+
+  // Delete selected tasks
+  if((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.size && !inF){
+    e.preventDefault();
+    const ids = new Set(selectedIds);
+    clearSelection();
+    Q.forEach(q => { tasks[q] = tasks[q].filter(t => !ids.has(t.id)); });
+    save(); Q.forEach(q => renderQ(q)); updateSummary(); updateTitle();
+    return;
   }
 
   if(inF) return;
@@ -3088,6 +3103,65 @@ if(prefs.focusMode) toggleFocus(prefs.focusedQ);
     prefs.hintShown = true; savePrefs();
   }, 800);
 })();
+
+// ═══════════════════════════════════════════════════════════════
+//  Drag-select + bulk delete
+// ═══════════════════════════════════════════════════════════════
+const selRectEl = document.createElement('div');
+selRectEl.id = 'sel-rect';
+document.body.appendChild(selRectEl);
+
+let selectedIds = new Set();
+let dragAnchor = null;
+let dragSelecting = false;
+
+function clearSelection(){
+  selectedIds.clear();
+  document.querySelectorAll('.ti.selected').forEach(el => el.classList.remove('selected'));
+}
+
+function syncSelection(){
+  document.querySelectorAll('.ti').forEach(el => {
+    el.classList.toggle('selected', selectedIds.has(el.dataset.id));
+  });
+}
+
+document.addEventListener('mousedown', e => {
+  if(e.button !== 0) return;
+  if(e.target.closest('button,input,textarea,[contenteditable],.add-ghost,.hamburger-menu,.modal-bg,.data-bg')) return;
+  dragAnchor = { x: e.clientX, y: e.clientY };
+  dragSelecting = false;
+});
+
+document.addEventListener('mousemove', e => {
+  if(!dragAnchor) return;
+  const dx = e.clientX - dragAnchor.x, dy = e.clientY - dragAnchor.y;
+  if(!dragSelecting && Math.sqrt(dx*dx + dy*dy) > 5){
+    dragSelecting = true;
+    selRectEl.style.display = 'block';
+    if(!e.shiftKey) clearSelection();
+  }
+  if(!dragSelecting) return;
+
+  const x1 = Math.min(e.clientX, dragAnchor.x), y1 = Math.min(e.clientY, dragAnchor.y);
+  const x2 = Math.max(e.clientX, dragAnchor.x), y2 = Math.max(e.clientY, dragAnchor.y);
+  selRectEl.style.cssText += `;left:${x1}px;top:${y1}px;width:${x2-x1}px;height:${y2-y1}px`;
+
+  document.querySelectorAll('.ti').forEach(el => {
+    const r = el.getBoundingClientRect();
+    const hit = r.left < x2 && r.right > x1 && r.top < y2 && r.bottom > y1;
+    if(hit) selectedIds.add(el.dataset.id);
+    else if(!e.shiftKey) selectedIds.delete(el.dataset.id);
+  });
+  syncSelection();
+});
+
+document.addEventListener('mouseup', e => {
+  if(dragSelecting){ selRectEl.style.display = 'none'; }
+  else if(dragAnchor && !e.target.closest('.ti')){ clearSelection(); }
+  dragAnchor = null;
+  dragSelecting = false;
+});
 
 </script>
 </body>
