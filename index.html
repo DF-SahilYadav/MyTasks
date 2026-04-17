@@ -324,7 +324,6 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   cursor:pointer;
   transition:transform var(--fade) var(--ease);
   border-radius:4px;
-  position:relative;
 }
 .tarrow:hover{background:var(--hover-2)}
 .tarrow.open{transform:rotate(90deg)}
@@ -340,19 +339,6 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
 }
 .tarrow.has-notes::before{border-left-color:var(--text-2)}
 .tarrow:hover::before{border-left-color:var(--text-2)}
-.tarrow.empty::after{
-  content:'';
-  position:absolute;
-  width:0;height:0;
-  border-top:3.5px solid transparent;
-  border-bottom:3.5px solid transparent;
-  border-left:5.5px solid var(--bg);
-  border-right:0;
-  margin-left:3px;
-  transition:border-left-color var(--fade) var(--ease);
-}
-.tarrow:hover.empty::after{border-left-color:var(--hover-2)}
-.tarrow.open.empty::after{margin-left:0;margin-top:3px}
 
 .tcb{
   width:15px;height:15px;border-radius:3px;
