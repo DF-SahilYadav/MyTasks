@@ -314,20 +314,19 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   cursor:text;
 }
 .tarrow{
-  width:14px;height:18px;
+  width:18px;height:20px;
   display:inline-flex;align-items:center;justify-content:center;
   color:var(--text-4);
   flex-shrink:0;margin-top:1px;
   cursor:pointer;
   transition:transform var(--fade) var(--ease), color var(--fade) var(--ease);
-  font-size:9px;
+  font-size:12px;
   border-radius:3px;
 }
 .tarrow:hover{color:var(--text-2);background:var(--hover-2)}
-.tarrow.has-notes{color:var(--text-3)}
+.tarrow.has-notes{color:var(--text-2)}
 .tarrow.open{transform:rotate(90deg)}
-.tarrow.empty{opacity:0}
-.ti:hover .tarrow.empty{opacity:1}
+.tarrow.empty{opacity:1;color:var(--text-4)}
 
 .tcb{
   width:15px;height:15px;border-radius:3px;
@@ -760,6 +759,31 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   .tnotes{color:#333}
 }
 
+/* Hamburger menu */
+.hamburger-menu{position:relative}
+.hamburger-btn{
+  background:none;border:none;
+  color:var(--text-3);
+  padding:5px 10px;border-radius:5px;
+  font-size:18px;cursor:pointer;line-height:1;
+  display:inline-flex;align-items:center;
+  transition:background var(--fade) var(--ease),color var(--fade) var(--ease);
+}
+.hamburger-btn:hover{background:var(--hover);color:var(--text)}
+.hamburger-dropdown{
+  display:none;flex-direction:column;gap:2px;
+  position:absolute;right:0;top:calc(100% + 6px);
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:6px;
+  min-width:170px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  z-index:200;
+}
+.hamburger-dropdown.show{display:flex}
+.hamburger-dropdown .tool{width:100%;justify-content:space-between;padding:7px 10px}
+
 /* Scrollbar */
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -781,15 +805,18 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
     <div class="brand">Tasks</div>
     <div class="date" id="todayDate"></div>
   </div>
-  <div class="tools">
-    <button class="tool" id="searchBtn" aria-label="Search"><span>Search</span><kbd>/</kbd></button>
-    <button class="tool" id="focusBtn" aria-label="Focus mode"><span>Focus</span><kbd>F</kbd></button>
-    <button class="tool" id="copyBtn" aria-label="Copy deliverables"><span class="tool-label">Deliverables</span></button>
-    <button class="tool" id="themeBtn" aria-label="Theme"><span id="themeIcon">◐</span></button>
-    <button class="tool" id="helpBtn" aria-label="Shortcuts"><span>Help</span><kbd>?</kbd></button>
-    <button class="tool" id="dataBtn" aria-label="Backup"><span class="tool-label">Data</span></button>
-    <button class="tool" id="setupBtn" aria-label="Mac shortcut"><span class="tool-label">Shortcut</span></button>
-    <button class="tool" id="qaBtn" aria-label="Quick add"><span class="tool-label">New</span><kbd id="qaKbd">⌘K</kbd></button>
+  <div class="hamburger-menu">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu" aria-expanded="false">☰</button>
+    <div class="hamburger-dropdown" id="hamburgerDropdown" role="menu">
+      <button class="tool" id="qaBtn" aria-label="Quick add"><span>New</span><kbd id="qaKbd">⌘K</kbd></button>
+      <button class="tool" id="searchBtn" aria-label="Search"><span>Search</span><kbd>/</kbd></button>
+      <button class="tool" id="focusBtn" aria-label="Focus mode"><span>Focus</span><kbd>F</kbd></button>
+      <button class="tool" id="copyBtn" aria-label="Copy deliverables"><span>Deliverables</span></button>
+      <button class="tool" id="dataBtn" aria-label="Backup"><span>Data</span></button>
+      <button class="tool" id="setupBtn" aria-label="Mac shortcut"><span>Shortcut</span></button>
+      <button class="tool" id="helpBtn" aria-label="Shortcuts"><span>Shortcuts</span><kbd>?</kbd></button>
+      <button class="tool" id="themeBtn" aria-label="Theme"><span id="themeIcon">◐</span><span>Theme</span></button>
+    </div>
   </div>
 </div>
 
@@ -1658,6 +1685,7 @@ function mkTask(task, q){
 
   const hasNotes = task.notes && task.notes.trim();
   const arrowClass = 'tarrow' + (task.open ? ' open' : '') + (hasNotes ? ' has-notes' : ' empty');
+  const arrowChar = hasNotes ? '▶' : '▷';
 
   // Meta items
   const metaParts = [];
@@ -1684,7 +1712,7 @@ function mkTask(task, q){
       <button class="handle" data-a="slash" title="Actions (/ when selected)" aria-label="Actions">+</button>
     </div>
     <div class="trow">
-      <span class="${arrowClass}" data-a="toggle" title="Expand notes" role="button" aria-label="Toggle notes">▶</span>
+      <span class="${arrowClass}" data-a="toggle" title="Expand notes" role="button" aria-label="Toggle notes">${arrowChar}</span>
       <div class="tinfo">
         <div class="tname ${task.completed ? 'done' : ''}" data-edit="name" tabindex="0">${esc(task.name)}</div>
       </div>
@@ -1845,8 +1873,8 @@ function mkTask(task, q){
     // Update arrow color
     const ar = div.querySelector('.tarrow');
     if(ar){
-      if(task.notes.trim()){ ar.classList.remove('empty'); ar.classList.add('has-notes'); }
-      else{ ar.classList.remove('has-notes'); ar.classList.add('empty'); }
+      if(task.notes.trim()){ ar.classList.remove('empty'); ar.classList.add('has-notes'); ar.textContent = '▶'; }
+      else{ ar.classList.remove('has-notes'); ar.classList.add('empty'); ar.textContent = '▷'; }
     }
   });
   ta.addEventListener('focus', ()=>{ focId = task.id; });
@@ -2517,6 +2545,26 @@ function buildSetupUrls(){
   document.getElementById('setupUrlFocusQ2').textContent = base + '?focus=q2';
   document.getElementById('setupUrlFocusQ3').textContent = base + '?focus=q3';
 }
+// Hamburger menu
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const hamburgerDropdown = document.getElementById('hamburgerDropdown');
+hamburgerBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = hamburgerDropdown.classList.toggle('show');
+  hamburgerBtn.setAttribute('aria-expanded', open);
+});
+document.addEventListener('click', () => {
+  hamburgerDropdown.classList.remove('show');
+  hamburgerBtn.setAttribute('aria-expanded', 'false');
+});
+hamburgerDropdown.addEventListener('click', e => {
+  // Close menu after clicking any item (unless it's a toggle like theme)
+  if(e.target.closest('.tool') && e.target.closest('.tool').id !== 'themeBtn'){
+    hamburgerDropdown.classList.remove('show');
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+
 document.getElementById('setupBtn').addEventListener('click', ()=>{
   buildSetupUrls();
   setupBg.classList.add('show');
