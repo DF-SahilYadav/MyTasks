@@ -268,7 +268,7 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
 .tlist{display:flex;flex-direction:column}
 .ti{
   position:relative;
-  padding-left:32px;
+  display:flex;align-items:flex-start;
   margin:0 -4px;
   transition:background var(--fade) var(--ease);
   border-radius:4px;
@@ -290,8 +290,9 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
 
 /* Left-side hover handles — drag + add-below */
 .ti-handles{
-  position:absolute;left:2px;top:4px;
-  display:flex;align-items:center;gap:0;
+  width:36px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:flex-end;gap:0;
+  padding-top:4px;
   opacity:0;
   transition:opacity var(--fade) var(--ease);
 }
@@ -312,6 +313,7 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
 
 /* Task row body */
 .trow{
+  flex:1;min-width:0;
   display:flex;align-items:flex-start;gap:6px;
   padding:4px 6px 4px 0;
   min-height:28px;
