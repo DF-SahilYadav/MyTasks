@@ -332,7 +332,7 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   width:15px;height:15px;border-radius:3px;
   border:1.5px solid var(--text-4);
   background:transparent;
-  cursor:pointer;flex-shrink:0;margin-left:6px;
+  cursor:pointer;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   padding:0;
   transition:all var(--fade) var(--ease);
@@ -384,6 +384,7 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   transition:opacity var(--fade) var(--ease);
 }
 .ti:hover .tactions,.ti.kbd-focused .tactions{opacity:1}
+.tactions .tcb{opacity:1}
 .tact{
   background:none;border:none;color:var(--text-4);
   width:24px;height:24px;cursor:pointer;
@@ -1718,18 +1719,13 @@ function mkTask(task, q){
       </div>
       <div class="tactions">
         <button class="tact ${isPinned ? 'active' : ''}" data-a="pin" title="Pin (P)" aria-label="Pin">${isPinned ? '★' : '☆'}</button>
+        <button class="tcb ${task.completed ? 'ck' : ''}" data-a="ck" role="checkbox" aria-checked="${task.completed}" aria-label="Toggle complete"></button>
         <button class="tact" data-a="del" title="Delete (D)" aria-label="Delete">×</button>
       </div>
-      <button class="tcb ${task.completed ? 'ck' : ''}" data-a="ck" role="checkbox" aria-checked="${task.completed}" aria-label="Toggle complete"></button>
     </div>
     <div class="tdet ${task.open ? 'open' : ''}">
       <div class="tdet-in">
-        <div class="tdet-props">
-          <label class="tdet-chk"><input type="checkbox" data-f="deliverable" ${task.deliverable ? 'checked' : ''}/> Deliverable</label>
-          <label class="tdet-chk"><input type="checkbox" data-f="recurring" ${task.recurring ? 'checked' : ''}/> Daily recurring</label>
-          <span class="tdet-q">${{q1:'Do First',q2:'Schedule',q3:'Delegate'}[q]}</span>
-        </div>
-        ${task.tags && task.tags.length ? `<div class="tdet-tags-row">${task.tags.map(t => `<span class="m-item m-tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>` : ''}
+${task.tags && task.tags.length ? `<div class="tdet-tags-row">${task.tags.map(t => `<span class="m-item m-tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>` : ''}
         <textarea class="tnotes" placeholder="Notes…" data-f="notes" aria-label="Notes">${esc(task.notes || '')}</textarea>
         <div class="tdet-foot">
           ${task.createdAt ? `<span>created ${new Date(task.createdAt).toLocaleDateString()} ${fmtTime(task.createdAt)}</span>` : ''}
@@ -1891,17 +1887,6 @@ function mkTask(task, q){
         openSlashMenu(task, q, div, 'notes');
       }
     }
-  });
-  // Deliverable / recurring checkboxes in expanded view
-  div.querySelector('[data-f="deliverable"]').addEventListener('change', e => {
-    e.stopPropagation();
-    task.deliverable = e.target.checked;
-    save(); renderQ(q); updateSummary();
-  });
-  div.querySelector('[data-f="recurring"]').addEventListener('change', e => {
-    e.stopPropagation();
-    task.recurring = e.target.checked;
-    save(); renderQ(q);
   });
 
   if(task.open) requestAnimationFrame(()=> autoR(ta));
