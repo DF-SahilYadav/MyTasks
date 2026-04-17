@@ -404,7 +404,7 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   max-height:0;overflow:hidden;
   transition:max-height var(--fade) var(--ease);
 }
-.tdet.open{max-height:800px;transition:max-height 300ms var(--ease)}
+.tdet.open{max-height:9999px;transition:max-height 400ms var(--ease)}
 .tdet-in{
   padding:2px 8px 10px 30px;
 }
@@ -414,8 +414,8 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   resize:none;outline:none;
   font-family:inherit;font-size:13px;line-height:1.55;
   color:var(--text-2);
-  padding:3px 0;min-height:22px;max-height:400px;
-  overflow-y:auto;
+  padding:3px 0;min-height:22px;
+  overflow-y:hidden;
 }
 .tnotes::placeholder{color:var(--text-4)}
 
@@ -1688,7 +1688,6 @@ function mkTask(task, q){
       <button class="tcb ${task.completed ? 'ck' : ''}" data-a="ck" role="checkbox" aria-checked="${task.completed}" aria-label="Toggle complete"></button>
       <div class="tinfo">
         <div class="tname ${task.completed ? 'done' : ''}" data-edit="name" tabindex="0">${esc(task.name)}</div>
-        ${metaHtml}
       </div>
       <div class="tactions">
         <button class="tact ${isPinned ? 'active' : ''}" data-a="pin" title="Pin (P)" aria-label="Pin">${isPinned ? '★' : '☆'}</button>
@@ -1778,7 +1777,29 @@ function mkTask(task, q){
   nameEl.addEventListener('blur', commitName);
   nameEl.addEventListener('keydown', ev => {
     ev.stopPropagation();
-    if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); commitName(); nameEl.blur(); }
+    if(ev.key === 'Enter' && !ev.shiftKey){
+      ev.preventDefault();
+      if(task.open){
+        // Toggle is open — move cursor into notes textarea
+        commitName();
+        const ta = div.querySelector('[data-f="notes"]');
+        if(ta) requestAnimationFrame(()=>{ ta.focus(); ta.selectionStart = ta.selectionEnd = 0; autoR(ta); });
+      } else {
+        // Toggle is closed — create new task below
+        commitName();
+        const newId = genId();
+        const newTask = { id:newId, name:'', completed:false, completedToday:false, open:false, notes:'', createdAt:nowIso(), deliverable:false, recurring:false, carried:false, carriedFrom:null, completedAt:null, dueDate:null, estimate:null, tags:[] };
+        const idx = tasks[q].indexOf(task);
+        if(idx >= 0) tasks[q].splice(idx+1, 0, newTask); else tasks[q].unshift(newTask);
+        prefs.lastQ = q; savePrefs();
+        save(); renderQ(q); updateSummary(); updateTitle();
+        requestAnimationFrame(()=>{
+          const newEl = document.querySelector(`.ti[data-id="${newId}"]`);
+          if(newEl && newEl._startEdit) newEl._startEdit();
+        });
+      }
+      return;
+    }
     if(ev.key === 'Escape'){ ev.preventDefault(); nameEl.textContent = task.name; editingName = false; nameEl.removeAttribute('contenteditable'); nameEl.blur(); }
     if(ev.key === '/' && editingName){
       // open slash menu at cursor position
@@ -2939,6 +2960,21 @@ document.addEventListener('keydown', e => {
 
   if(e.key === 'x'){ e.preventDefault(); toggleComplete(f.task, f.q, f.el); return; }
   if(e.key === 'e'){ e.preventDefault(); if(f.el && f.el._startEdit) f.el._startEdit(); return; }
+  if(e.key === ' '){
+    // Space on kbd-focused task → create new task below + edit its name
+    e.preventDefault();
+    const newId = genId();
+    const newTask = { id:newId, name:'', completed:false, completedToday:false, open:false, notes:'', createdAt:nowIso(), deliverable:false, recurring:false, carried:false, carriedFrom:null, completedAt:null, dueDate:null, estimate:null, tags:[] };
+    const idx = tasks[f.q].indexOf(f.task);
+    if(idx >= 0) tasks[f.q].splice(idx+1, 0, newTask); else tasks[f.q].unshift(newTask);
+    prefs.lastQ = f.q; savePrefs();
+    save(); renderQ(f.q); updateSummary(); updateTitle();
+    requestAnimationFrame(()=>{
+      const newEl = document.querySelector(`.ti[data-id="${newId}"]`);
+      if(newEl && newEl._startEdit) newEl._startEdit();
+    });
+    return;
+  }
   if(e.key === 'o'){
     e.preventDefault();
     f.task.open = !f.task.open; save();
