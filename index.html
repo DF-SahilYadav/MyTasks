@@ -805,6 +805,8 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
     <div class="brand">Tasks</div>
     <div class="date" id="todayDate"></div>
   </div>
+  <button class="tool" id="dataBtn" aria-label="Backup"><span class="tool-label">Data</span></button>
+  <button class="tool" id="themeBtn" aria-label="Theme"><span id="themeIcon">◐</span></button>
   <div class="hamburger-menu">
     <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu" aria-expanded="false">☰</button>
     <div class="hamburger-dropdown" id="hamburgerDropdown" role="menu">
@@ -812,10 +814,8 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
       <button class="tool" id="searchBtn" aria-label="Search"><span>Search</span><kbd>/</kbd></button>
       <button class="tool" id="focusBtn" aria-label="Focus mode"><span>Focus</span><kbd>F</kbd></button>
       <button class="tool" id="copyBtn" aria-label="Copy deliverables"><span>Deliverables</span></button>
-      <button class="tool" id="dataBtn" aria-label="Backup"><span>Data</span></button>
       <button class="tool" id="setupBtn" aria-label="Mac shortcut"><span>Shortcut</span></button>
       <button class="tool" id="helpBtn" aria-label="Shortcuts"><span>Shortcuts</span><kbd>?</kbd></button>
-      <button class="tool" id="themeBtn" aria-label="Theme"><span id="themeIcon">◐</span><span>Theme</span></button>
     </div>
   </div>
 </div>
@@ -1844,11 +1844,6 @@ function mkTask(task, q){
   // Pin / deliv / slash / del
   div.querySelector('[data-a="pin"]').addEventListener('click', e => {
     e.stopPropagation(); togglePin(task, q);
-  });
-  div.querySelector('[data-a="deliv"]').addEventListener('click', e => {
-    e.stopPropagation();
-    task.deliverable = !task.deliverable;
-    save(); renderQ(q); updateSummary();
   });
   div.querySelector('[data-a="slash"]').addEventListener('click', e => {
     e.stopPropagation();
