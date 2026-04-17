@@ -314,17 +314,30 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   cursor:text;
 }
 .tarrow{
-  width:24px;height:24px;
+  width:26px;height:26px;
   display:inline-flex;align-items:center;justify-content:center;
   flex-shrink:0;margin-top:1px;
   cursor:pointer;
-  transition:transform var(--fade) var(--ease), color var(--fade) var(--ease), -webkit-text-stroke var(--fade) var(--ease);
-  font-size:16px;line-height:1;
+  transition:transform var(--fade) var(--ease);
   border-radius:3px;
 }
-.tarrow.has-notes{color:var(--text-2);-webkit-text-stroke:0}
-.tarrow.empty{color:transparent;-webkit-text-stroke:1.5px var(--text-4)}
-.tarrow:hover{color:var(--text-2);-webkit-text-stroke:0;background:var(--hover-2)}
+.tarrow:hover{background:var(--hover-2)}
+.tarrow::before{
+  content:'';
+  width:13px;height:15px;
+  transition:background var(--fade) var(--ease);
+}
+.tarrow.has-notes::before{
+  background:var(--text-2);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpolygon points='0,0 10,6 0,12' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpolygon points='0,0 10,6 0,12' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.tarrow.empty::before{
+  background:var(--text-4);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpolygon points='1,1 11,7 1,13' fill='none' stroke='black' stroke-width='2.5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpolygon points='1,1 11,7 1,13' fill='none' stroke='black' stroke-width='2.5'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.tarrow:hover::before{background:var(--text-2)}
 .tarrow.open{transform:rotate(90deg)}
 
 .tcb{
@@ -1685,7 +1698,7 @@ function mkTask(task, q){
 
   const hasNotes = task.notes && task.notes.trim();
   const arrowClass = 'tarrow' + (task.open ? ' open' : '') + (hasNotes ? ' has-notes' : ' empty');
-  const arrowChar = '▶';
+  const arrowChar = '';
 
   // Meta items
   const metaParts = [];
