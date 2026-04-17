@@ -223,11 +223,12 @@ a{color:inherit}
    ══════════════════════════════════════════════════════ */
 .grid{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
+  grid-template-columns:1fr 1fr;
   gap:44px;
   max-width:1280px;margin:0 auto;
   transition:opacity var(--fade) var(--ease);
 }
+.quadrant[data-q="q3"]{grid-column:1/-1}
 body.focus-mode .quadrant:not(.focused){opacity:.28;pointer-events:none}
 body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
 
@@ -417,6 +418,27 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   overflow-y:auto;
 }
 .tnotes::placeholder{color:var(--text-4)}
+
+.tdet-props{
+  display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+  padding:6px 0 8px;
+  border-bottom:1px dashed var(--border-soft);
+  margin-bottom:6px;
+}
+.tdet-chk{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;color:var(--text-2);cursor:pointer;
+  user-select:none;
+}
+.tdet-chk input{cursor:pointer;accent-color:var(--accent)}
+.tdet-q{
+  font-size:11px;color:var(--text-4);
+  margin-left:auto;
+}
+.tdet-tags-row{
+  display:flex;gap:4px;flex-wrap:wrap;align-items:center;
+  padding:4px 0 2px;
+}
 
 .tdet-foot{
   margin-top:6px;padding-top:6px;
@@ -711,8 +733,8 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
 .toast button:hover{background:rgba(255,255,255,.25)}
 
 /* Responsive */
-@media(max-width:980px){
-  .grid{grid-template-columns:1fr 1fr;gap:32px}
+@media(max-width:680px){
+  .quadrant[data-q="q3"]{grid-column:1}
 }
 @media(max-width:680px){
   body{padding:16px 18px 100px}
@@ -732,7 +754,7 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   .tlist-sep,.briefing,.filter-chip,.storage-warning,.add-ghost,.tarrow{
     display:none !important;
   }
-  .grid{grid-template-columns:1fr 1fr 1fr;gap:24px}
+  .grid{grid-template-columns:1fr 1fr;gap:24px}
   .ti{padding-left:0;margin:0}
   .tdet{max-height:none !important;overflow:visible !important}
   .tnotes{color:#333}
@@ -807,10 +829,10 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
       <span class="qh-sub">urgent &amp; important</span>
       <span class="qh-count" id="c-q1">0</span>
     </div>
-    <div class="tlist" id="l-q1" role="list"></div>
     <div class="add-ghost" data-q="q1" tabindex="0" role="button" aria-label="Add task to Do first">
       <span class="g-plus">+</span><span>New task</span>
     </div>
+    <div class="tlist" id="l-q1" role="list"></div>
   </section>
   <section class="quadrant" data-q="q2" aria-labelledby="q2-name">
     <div class="qh">
@@ -818,10 +840,10 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
       <span class="qh-sub">important, not urgent</span>
       <span class="qh-count" id="c-q2">0</span>
     </div>
-    <div class="tlist" id="l-q2" role="list"></div>
     <div class="add-ghost" data-q="q2" tabindex="0" role="button" aria-label="Add task to Schedule">
       <span class="g-plus">+</span><span>New task</span>
     </div>
+    <div class="tlist" id="l-q2" role="list"></div>
   </section>
   <section class="quadrant" data-q="q3" aria-labelledby="q3-name">
     <div class="qh">
@@ -829,10 +851,10 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
       <span class="qh-sub">urgent, not important</span>
       <span class="qh-count" id="c-q3">0</span>
     </div>
-    <div class="tlist" id="l-q3" role="list"></div>
     <div class="add-ghost" data-q="q3" tabindex="0" role="button" aria-label="Add task to Delegate">
       <span class="g-plus">+</span><span>New task</span>
     </div>
+    <div class="tlist" id="l-q3" role="list"></div>
   </section>
 </div>
 
@@ -1676,11 +1698,17 @@ function mkTask(task, q){
     </div>
     <div class="tdet ${task.open ? 'open' : ''}">
       <div class="tdet-in">
+        <div class="tdet-props">
+          <label class="tdet-chk"><input type="checkbox" data-f="deliverable" ${task.deliverable ? 'checked' : ''}/> Deliverable</label>
+          <label class="tdet-chk"><input type="checkbox" data-f="recurring" ${task.recurring ? 'checked' : ''}/> Daily recurring</label>
+          <span class="tdet-q">${{q1:'Do First',q2:'Schedule',q3:'Delegate'}[q]}</span>
+        </div>
+        ${task.tags && task.tags.length ? `<div class="tdet-tags-row">${task.tags.map(t => `<span class="m-item m-tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>` : ''}
         <textarea class="tnotes" placeholder="Notes…" data-f="notes" aria-label="Notes">${esc(task.notes || '')}</textarea>
         <div class="tdet-foot">
           ${task.createdAt ? `<span>created ${new Date(task.createdAt).toLocaleDateString()} ${fmtTime(task.createdAt)}</span>` : ''}
           ${task.completedAt ? `<span>done ${new Date(task.completedAt).toLocaleDateString()} ${fmtTime(task.completedAt)}</span>` : ''}
-          ${task.carriedFrom ? `<span>from ${task.carriedFrom}</span>` : ''}
+          ${task.carriedFrom ? `<span>carried from ${task.carriedFrom}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -1821,6 +1849,18 @@ function mkTask(task, q){
       }
     }
   });
+  // Deliverable / recurring checkboxes in expanded view
+  div.querySelector('[data-f="deliverable"]').addEventListener('change', e => {
+    e.stopPropagation();
+    task.deliverable = e.target.checked;
+    save(); renderQ(q); updateSummary();
+  });
+  div.querySelector('[data-f="recurring"]').addEventListener('change', e => {
+    e.stopPropagation();
+    task.recurring = e.target.checked;
+    save(); renderQ(q);
+  });
+
   if(task.open) requestAnimationFrame(()=> autoR(ta));
   if(focId === task.id && task.open){
     requestAnimationFrame(()=>{
