@@ -1,0 +1,2979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tasks</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════
+   PAPER — pure cream, no color except alarms.
+   Typography + indent + spacing do the hierarchy.
+   ══════════════════════════════════════════════════════ */
+:root{
+  --bg:#f7f3ec;
+  --surface:#fcfaf5;
+  --surface-2:#f3ede3;
+  --border:#e8e1d3;
+  --border-soft:#ede6d8;
+  --text:#2a2724;
+  --text-2:#52504c;
+  --text-3:#8a867f;
+  --text-4:#b4afa5;
+  --accent:#2a2724;
+  --danger:#b23a2e;
+  --danger-soft:#d97761;
+  --focus-ring:rgba(42,39,36,.28);
+  --hover:rgba(42,39,36,.04);
+  --hover-2:rgba(42,39,36,.07);
+  --ease:cubic-bezier(.4,0,.2,1);
+  --fade:180ms;
+}
+
+:root.dark-theme{
+  --bg:#1e1c18;
+  --surface:#25231e;
+  --surface-2:#2c2923;
+  --border:#3a362d;
+  --border-soft:#322f28;
+  --text:#ebe6da;
+  --text-2:#b8b2a4;
+  --text-3:#85806f;
+  --text-4:#5a5649;
+  --accent:#ebe6da;
+  --danger:#e07c6a;
+  --danger-soft:#c65f4a;
+  --focus-ring:rgba(235,230,218,.35);
+  --hover:rgba(235,230,218,.05);
+  --hover-2:rgba(235,230,218,.08);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:14px;
+  line-height:1.55;
+  min-height:100vh;
+  padding:28px 32px 120px;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+
+/* Focus outlines — subtle, Notion-ish */
+:focus{outline:none}
+:focus-visible{outline:1.5px solid var(--focus-ring);outline-offset:2px;border-radius:3px}
+
+/* Skip link */
+.skip-link{position:absolute;left:-9999px;top:8px;background:var(--text);color:var(--bg);padding:6px 12px;border-radius:4px;z-index:999}
+.skip-link:focus{left:8px}
+
+a{color:inherit}
+
+/* ══════════════════════════════════════════════════════
+   TOP BAR — quieter than v2. No chunky pill buttons.
+   ══════════════════════════════════════════════════════ */
+.topbar{
+  max-width:1280px;margin:0 auto 6px;
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;
+}
+.topbar-left{display:flex;align-items:baseline;gap:12px;min-width:0}
+.brand{
+  font-family:'Fraunces',serif;
+  font-weight:600;font-size:22px;letter-spacing:-.01em;
+  color:var(--text);
+}
+.date{font-size:12px;color:var(--text-3);font-weight:400}
+
+.tools{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.tool{
+  background:none;border:none;
+  color:var(--text-3);
+  padding:5px 9px;border-radius:5px;
+  font-family:inherit;font-size:12px;font-weight:500;
+  cursor:pointer;
+  transition:background var(--fade) var(--ease), color var(--fade) var(--ease);
+  display:inline-flex;align-items:center;gap:5px;
+}
+.tool:hover{background:var(--hover);color:var(--text)}
+.tool kbd{
+  font-family:inherit;font-size:10px;font-weight:500;
+  color:var(--text-4);
+  background:none;border:none;padding:0;
+}
+.tool:hover kbd{color:var(--text-3)}
+@media(max-width:720px){.tool-label{display:none}}
+
+/* ══════════════════════════════════════════════════════
+   SUMMARY BAR — replaces the dashboard card strip.
+   Single quiet line, each fragment is a filter toggle.
+   ══════════════════════════════════════════════════════ */
+.summary{
+  max-width:1280px;margin:0 auto 26px;
+  font-size:12px;color:var(--text-3);
+  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+  min-height:20px;
+}
+.summary-item{
+  background:none;border:none;
+  color:var(--text-3);
+  font-family:inherit;font-size:12px;
+  cursor:pointer;padding:2px 6px;border-radius:4px;
+  transition:background var(--fade) var(--ease),color var(--fade) var(--ease);
+}
+.summary-item:hover{background:var(--hover);color:var(--text-2)}
+.summary-item.active{color:var(--text);background:var(--hover-2);font-weight:500}
+.summary-item.warn{color:var(--danger)}
+.summary-sep{color:var(--text-4);user-select:none;padding:0 2px}
+
+/* Pinned task — quiet line, not a card */
+.pin-bar{
+  max-width:1280px;margin:-18px auto 18px;
+  display:none;align-items:center;gap:8px;
+  font-size:12px;color:var(--text-2);
+  padding:6px 0;
+}
+.pin-bar.show{display:flex}
+.pin-label{color:var(--text-3);font-size:11px;font-weight:500;letter-spacing:.02em}
+.pin-name{
+  flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  cursor:pointer;font-weight:500;color:var(--text);
+  padding:2px 4px;border-radius:4px;
+  transition:background var(--fade) var(--ease);
+}
+.pin-name:hover{background:var(--hover)}
+.pin-name.done{text-decoration:line-through;color:var(--text-3)}
+.pin-unpin{
+  background:none;border:none;color:var(--text-4);
+  font-size:11px;font-family:inherit;cursor:pointer;
+  padding:2px 6px;border-radius:4px;
+  transition:color var(--fade) var(--ease);
+}
+.pin-unpin:hover{color:var(--text-2)}
+
+/* ══════════════════════════════════════════════════════
+   BRIEFING — calm one-liner at top, not banner
+   ══════════════════════════════════════════════════════ */
+.briefing{
+  max-width:1280px;margin:-18px auto 18px;
+  display:none;font-size:12px;color:var(--text-2);
+  padding:8px 12px;
+  background:var(--surface);border-left:2px solid var(--text-4);
+  border-radius:0 4px 4px 0;
+  align-items:flex-start;gap:8px;
+}
+.briefing.show{display:flex}
+.briefing-text{flex:1;line-height:1.6}
+.briefing-text b{color:var(--text);font-weight:600}
+.briefing-close{
+  background:none;border:none;color:var(--text-4);
+  cursor:pointer;font-size:14px;padding:0 2px;line-height:1;
+  font-family:inherit;
+}
+.briefing-close:hover{color:var(--text-2)}
+
+/* Filter chip */
+.filter-chip{
+  max-width:1280px;margin:0 auto 10px;
+  display:none;align-items:center;gap:6px;
+  font-size:11px;color:var(--text-3);
+}
+.filter-chip.show{display:inline-flex}
+.filter-chip b{color:var(--text);font-weight:500}
+.filter-chip-close{
+  background:none;border:none;color:var(--text-4);
+  cursor:pointer;font-size:13px;padding:0 4px;font-family:inherit;
+}
+.filter-chip-close:hover{color:var(--text-2)}
+
+/* Search bar — cleaner */
+.search-bar{max-width:1280px;margin:0 auto 12px;display:none;position:relative}
+.search-bar.show{display:block}
+.search-bar input{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:9px 34px 9px 13px;
+  font-size:13px;font-family:inherit;
+  outline:none;color:var(--text);
+  transition:border-color var(--fade) var(--ease);
+}
+.search-bar input:focus{border-color:var(--text-3)}
+.search-bar input::placeholder{color:var(--text-4)}
+.search-bar .sc{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--text-4);cursor:pointer;font-size:14px;
+  font-family:inherit;
+}
+
+.storage-warning{
+  max-width:1280px;margin:0 auto 10px;
+  padding:7px 12px;background:var(--surface);
+  border-left:2px solid var(--danger);border-radius:0 4px 4px 0;
+  font-size:11px;color:var(--danger);display:none;
+}
+.storage-warning.show{display:block}
+
+/* ══════════════════════════════════════════════════════
+   GRID — three columns, no cards, pure text sections.
+   ══════════════════════════════════════════════════════ */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:44px;
+  max-width:1280px;margin:0 auto;
+  transition:opacity var(--fade) var(--ease);
+}
+body.focus-mode .quadrant:not(.focused){opacity:.28;pointer-events:none}
+body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
+
+.quadrant{
+  min-width:0;
+  display:flex;flex-direction:column;
+  transition:opacity var(--fade) var(--ease);
+}
+
+/* Quadrant header — minimal, no backgrounds */
+.qh{
+  display:flex;align-items:baseline;gap:8px;
+  padding-bottom:8px;margin-bottom:10px;
+  border-bottom:1px solid var(--border);
+  user-select:none;
+}
+.qh-name{
+  font-family:'Fraunces',serif;
+  font-weight:600;font-size:16px;letter-spacing:-.005em;
+  color:var(--text);
+}
+.qh-sub{
+  font-size:11px;color:var(--text-3);font-weight:400;
+  margin-left:auto;
+}
+.qh-count{
+  font-variant-numeric:tabular-nums;
+  color:var(--text-3);font-size:11px;font-weight:500;
+  margin-left:6px;
+}
+.qh-count.warn{color:var(--danger);font-weight:600}
+.qh-hint{font-size:10px;color:var(--text-4);font-style:italic;margin-left:6px}
+
+/* ══════════════════════════════════════════════════════
+   TASK ROW — Notion block. Hover handles on left.
+   ══════════════════════════════════════════════════════ */
+.tlist{display:flex;flex-direction:column}
+.ti{
+  position:relative;
+  padding-left:32px;
+  margin:0 -4px;
+  transition:background var(--fade) var(--ease);
+  border-radius:4px;
+}
+.ti:hover{background:var(--hover)}
+.ti.dragging{opacity:.4}
+.ti.search-hidden,.ti.filter-hidden{display:none}
+.ti.kbd-focused{background:var(--hover-2)}
+.ti.kbd-focused::before{
+  content:'';position:absolute;left:-2px;top:4px;bottom:4px;width:2px;
+  background:var(--text);border-radius:1px;
+}
+.ti.stale .tname{color:var(--danger)}
+.ti.stale .tname.done{color:var(--text-3)}
+
+/* Left-side hover handles — drag + add-below */
+.ti-handles{
+  position:absolute;left:2px;top:4px;
+  display:flex;align-items:center;gap:0;
+  opacity:0;
+  transition:opacity var(--fade) var(--ease);
+}
+.ti:hover .ti-handles,.ti.kbd-focused .ti-handles{opacity:1}
+.handle{
+  width:18px;height:20px;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--text-4);
+  background:none;border:none;cursor:pointer;
+  border-radius:3px;
+  font-family:inherit;font-size:13px;
+  transition:all var(--fade) var(--ease);
+}
+.handle:hover{background:var(--hover-2);color:var(--text-2)}
+.drag-handle{cursor:grab;font-size:12px}
+.drag-handle[draggable="true"]{-webkit-user-drag:element}
+.drag-handle:active{cursor:grabbing}
+
+/* Task row body */
+.trow{
+  display:flex;align-items:flex-start;gap:6px;
+  padding:4px 6px 4px 0;
+  min-height:28px;
+  cursor:text;
+}
+.tarrow{
+  width:14px;height:18px;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--text-4);
+  flex-shrink:0;margin-top:1px;
+  cursor:pointer;
+  transition:transform var(--fade) var(--ease), color var(--fade) var(--ease);
+  font-size:9px;
+  border-radius:3px;
+}
+.tarrow:hover{color:var(--text-2);background:var(--hover-2)}
+.tarrow.has-notes{color:var(--text-3)}
+.tarrow.open{transform:rotate(90deg)}
+.tarrow.empty{opacity:0}
+.ti:hover .tarrow.empty{opacity:1}
+
+.tcb{
+  width:15px;height:15px;border-radius:3px;
+  border:1.5px solid var(--text-4);
+  background:transparent;
+  cursor:pointer;flex-shrink:0;margin-top:3px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;
+  transition:all var(--fade) var(--ease);
+}
+.tcb:hover{border-color:var(--text-2)}
+.tcb.ck{background:var(--text-2);border-color:var(--text-2)}
+.tcb.ck::after{content:'';width:7px;height:4px;border:1.5px solid var(--bg);border-top:none;border-right:none;transform:rotate(-45deg) translate(1px,-1px)}
+
+.tinfo{flex:1;min-width:0;padding-top:2px}
+.tname{
+  font-size:14px;font-weight:400;line-height:1.5;
+  color:var(--text);
+  word-break:break-word;
+  padding:1px 3px;margin:-1px -3px;
+  border-radius:3px;
+  transition:color var(--fade) var(--ease);
+  cursor:text;
+  outline:none;
+}
+.tname.done{text-decoration:line-through;color:var(--text-3);opacity:.6}
+.tname[contenteditable="true"]{
+  background:var(--surface);
+  box-shadow:0 0 0 1px var(--border);
+}
+
+/* Inline meta — ultra quiet */
+.tmeta{
+  margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:11px;color:var(--text-3);line-height:1.4;
+}
+.tmeta .m-item{display:inline-flex;align-items:center;gap:3px}
+.tmeta .m-deliv{color:var(--text-2);font-weight:500}
+.tmeta .m-deliv::before{content:'▸ ';color:var(--text-3)}
+.tmeta .m-carry{color:var(--text-3)}
+.tmeta .m-carry.stale{color:var(--danger)}
+.tmeta .m-recur{color:var(--text-3)}
+.tmeta .m-tag{
+  color:var(--text-3);cursor:pointer;
+  padding:0 3px;border-radius:3px;
+  transition:background var(--fade) var(--ease),color var(--fade) var(--ease);
+}
+.tmeta .m-tag:hover{background:var(--hover-2);color:var(--text)}
+
+/* Right-side actions — appear on hover, minimal */
+.tactions{
+  display:flex;align-items:center;gap:0;
+  opacity:0;
+  margin-top:1px;
+  transition:opacity var(--fade) var(--ease);
+}
+.ti:hover .tactions,.ti.kbd-focused .tactions{opacity:1}
+.tact{
+  background:none;border:none;color:var(--text-4);
+  width:24px;height:24px;cursor:pointer;
+  font-family:inherit;font-size:13px;
+  border-radius:3px;padding:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:background var(--fade) var(--ease),color var(--fade) var(--ease);
+}
+.tact:hover{background:var(--hover-2);color:var(--text-2)}
+.tact.active{opacity:1;color:var(--text-2)}
+
+/* ══════════════════════════════════════════════════════
+   DETAILS — Notion toggle. No border, no background.
+   Just indented text that slides in.
+   ══════════════════════════════════════════════════════ */
+.tdet{
+  max-height:0;overflow:hidden;
+  transition:max-height var(--fade) var(--ease);
+}
+.tdet.open{max-height:800px;transition:max-height 300ms var(--ease)}
+.tdet-in{
+  padding:2px 8px 10px 30px;
+}
+.tnotes{
+  width:100%;
+  background:transparent;border:none;
+  resize:none;outline:none;
+  font-family:inherit;font-size:13px;line-height:1.55;
+  color:var(--text-2);
+  padding:3px 0;min-height:22px;max-height:400px;
+  overflow-y:auto;
+}
+.tnotes::placeholder{color:var(--text-4)}
+
+.tdet-foot{
+  margin-top:6px;padding-top:6px;
+  font-size:10px;color:var(--text-4);
+  display:flex;gap:14px;flex-wrap:wrap;
+  border-top:1px dashed var(--border-soft);
+}
+.tdet-foot span{display:inline-flex;align-items:center;gap:3px}
+
+/* Completed separator */
+.tlist-sep{
+  font-size:10px;color:var(--text-4);font-weight:500;
+  padding:14px 4px 6px 30px;
+  cursor:pointer;user-select:none;
+  display:flex;align-items:center;gap:4px;
+  transition:color var(--fade) var(--ease);
+}
+.tlist-sep:hover{color:var(--text-3)}
+.tlist-sep .sep-arrow{transition:transform var(--fade) var(--ease);font-size:8px}
+.tlist-sep.collapsed .sep-arrow{transform:rotate(-90deg)}
+
+/* ══════════════════════════════════════════════════════
+   GHOST ADD ROW — Notion-style "+ New" line.
+   ══════════════════════════════════════════════════════ */
+.add-ghost{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 6px 6px 32px;
+  margin:2px -4px 0;
+  color:var(--text-4);
+  font-size:13px;font-family:inherit;
+  cursor:text;
+  border-radius:4px;
+  transition:color var(--fade) var(--ease),background var(--fade) var(--ease);
+  user-select:none;
+  min-height:30px;
+}
+.add-ghost:hover{color:var(--text-3);background:var(--hover)}
+.add-ghost.active{color:var(--text);background:transparent}
+.add-ghost .g-plus{
+  width:15px;font-size:14px;color:inherit;text-align:center;
+  flex-shrink:0;line-height:1;
+}
+.add-ghost-input{
+  flex:1;min-width:0;
+  background:transparent;border:none;outline:none;
+  font-family:inherit;font-size:14px;
+  color:var(--text);padding:0;
+  line-height:1.5;
+}
+.add-ghost-input::placeholder{color:var(--text-4)}
+
+/* Drop indicator — single hairline, no animation */
+.drop-ind{
+  height:2px;background:var(--text);border-radius:1px;
+  margin:0 -4px;
+  opacity:.7;pointer-events:none;
+}
+
+/* Empty state */
+.empty{
+  padding:16px 32px;color:var(--text-4);
+  font-size:12px;line-height:1.6;font-style:italic;
+}
+.empty b{color:var(--text-3);font-style:normal;font-weight:500}
+
+/* ══════════════════════════════════════════════════════
+   SLASH MENU — popover from inline cursor position.
+   ══════════════════════════════════════════════════════ */
+.slash-menu{
+  position:absolute;z-index:250;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:7px;
+  box-shadow:0 8px 24px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.05);
+  min-width:200px;max-width:260px;
+  padding:5px;
+  display:none;
+  font-size:12px;
+  animation:slashIn 120ms var(--ease);
+}
+.slash-menu.show{display:block}
+@keyframes slashIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.slash-section{
+  font-size:9px;font-weight:600;color:var(--text-4);
+  text-transform:uppercase;letter-spacing:.06em;
+  padding:6px 9px 2px;
+}
+.slash-item{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 9px;border-radius:4px;
+  cursor:pointer;color:var(--text-2);
+  transition:background var(--fade) var(--ease);
+}
+.slash-item:hover,.slash-item.hl{background:var(--hover-2);color:var(--text)}
+.slash-icon{width:16px;font-size:13px;text-align:center;color:var(--text-3);flex-shrink:0}
+.slash-label{flex:1;min-width:0;font-size:12px}
+.slash-hint{color:var(--text-4);font-size:10px}
+
+/* ══════════════════════════════════════════════════════
+   MODAL (Quick add, Setup, Help, Data)
+   ══════════════════════════════════════════════════════ */
+.modal-bg{
+  position:fixed;inset:0;
+  background:rgba(42,39,36,.32);
+  z-index:200;
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:14vh;
+  backdrop-filter:blur(2px);
+}
+.modal-bg.show{display:flex}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;width:540px;max-width:92vw;
+  box-shadow:0 20px 60px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.05);
+  overflow:hidden;max-height:80vh;display:flex;flex-direction:column;
+  animation:mIn 180ms var(--ease);
+}
+@keyframes mIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
+.mhead{
+  padding:14px 20px 0;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.mhead-left{
+  display:flex;align-items:center;gap:7px;
+  font-weight:600;font-size:13px;
+  font-family:'Fraunces',serif;
+}
+.mbody{padding:10px 20px 14px;overflow-y:auto;flex:1}
+.minput{
+  width:100%;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:6px;
+  padding:9px 13px;font-size:14px;font-family:inherit;
+  outline:none;margin-bottom:8px;color:var(--text);
+  transition:border-color var(--fade) var(--ease);
+}
+.minput:focus{border-color:var(--text-3)}
+.mhint{font-size:10px;color:var(--text-4);margin-bottom:10px;font-style:italic}
+.mhint code{
+  background:var(--surface-2);
+  padding:1px 4px;border-radius:3px;
+  font-family:'SF Mono','Monaco',monospace;font-size:10px;
+}
+.mtxt{
+  width:100%;min-height:55px;
+  resize:none;overflow-y:auto;
+  background:var(--surface-2);
+  border:1px solid var(--border);border-radius:6px;
+  padding:9px 13px;font-size:12px;font-family:inherit;
+  outline:none;line-height:1.55;
+  margin-bottom:10px;color:var(--text);max-height:200px;
+  transition:border-color var(--fade) var(--ease);
+}
+.mtxt:focus{border-color:var(--text-3)}
+.mopts{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.mqb{
+  padding:5px 10px;border-radius:5px;
+  font-size:11px;font-weight:500;
+  border:1px solid var(--border);
+  background:transparent;cursor:pointer;
+  color:var(--text-3);font-family:inherit;
+  transition:all var(--fade) var(--ease);
+}
+.mqb:hover{border-color:var(--text-3);color:var(--text-2)}
+.mqb.a{background:var(--text);color:var(--bg);border-color:var(--text)}
+.mdiv{width:1px;height:18px;background:var(--border);margin:0 2px}
+.mtb{
+  padding:5px 10px;border-radius:5px;
+  font-size:10px;font-weight:500;
+  border:1px solid var(--border);
+  background:transparent;cursor:pointer;
+  color:var(--text-3);font-family:inherit;
+  transition:all var(--fade) var(--ease);
+}
+.mtb:hover{border-color:var(--text-3);color:var(--text-2)}
+.mtb.active{background:var(--surface-2);color:var(--text);border-color:var(--text-3)}
+.mfoot{
+  padding:10px 20px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface-2);flex-shrink:0;gap:8px;
+}
+.mfoot-hint{font-size:10px;color:var(--text-3)}
+.mfoot-hint kbd{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:3px;padding:0 4px;font-size:9px;font-weight:500;
+  font-family:inherit;color:var(--text-2);
+}
+.msubmit{
+  padding:6px 16px;border-radius:5px;
+  font-size:12px;font-weight:500;
+  border:none;background:var(--text);color:var(--bg);
+  cursor:pointer;font-family:inherit;
+  transition:opacity var(--fade) var(--ease);
+}
+.msubmit:hover{opacity:.9}
+.msubmit.secondary{
+  background:transparent;color:var(--text-2);
+  border:1px solid var(--border);
+}
+
+/* Setup modal */
+.setup-body{
+  padding:14px 22px 18px;max-height:62vh;overflow-y:auto;
+  font-size:13px;color:var(--text-2);line-height:1.7;
+}
+.setup-body h4{
+  font-family:'Fraunces',serif;font-size:14px;
+  color:var(--text);margin:14px 0 4px;font-weight:600;
+}
+.setup-body h4:first-child{margin-top:0}
+.setup-body ol{padding-left:18px;line-height:1.85}
+.setup-body code{
+  background:var(--surface-2);
+  padding:1px 4px;border-radius:3px;
+  font-size:12px;font-family:'SF Mono','Monaco',monospace;
+}
+.setup-body p{margin:4px 0}
+.setup-body a{color:var(--text);text-decoration:underline}
+.setup-url{
+  background:var(--surface-2);
+  border:1px solid var(--border);border-radius:5px;
+  padding:8px 12px;margin:6px 0;
+  font-family:'SF Mono','Monaco',monospace;font-size:11px;
+  word-break:break-all;cursor:pointer;position:relative;
+  transition:background var(--fade) var(--ease);
+}
+.setup-url:hover{background:var(--hover-2)}
+.setup-url.copied{background:var(--surface);border-color:var(--text-3)}
+.setup-url::after{
+  content:attr(data-hint);
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-size:9px;color:var(--text-4);font-family:inherit;
+  text-transform:uppercase;letter-spacing:.06em;font-weight:600;
+  background:var(--surface);padding:2px 6px;border-radius:3px;
+  border:1px solid var(--border);
+}
+.setup-tabs{
+  display:flex;gap:2px;margin-bottom:14px;
+  border-bottom:1px solid var(--border);
+}
+.setup-tab{
+  background:none;border:none;
+  padding:8px 12px;font-size:12px;
+  color:var(--text-3);cursor:pointer;font-family:inherit;font-weight:500;
+  border-bottom:1.5px solid transparent;margin-bottom:-1px;
+  transition:all var(--fade) var(--ease);
+}
+.setup-tab.active{color:var(--text);border-bottom-color:var(--text)}
+.setup-tab:hover{color:var(--text-2)}
+.setup-pane{display:none}
+.setup-pane.active{display:block}
+
+/* Help grid */
+.help-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 22px;padding:4px 0}
+.help-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;padding:3px 0;
+}
+.help-row span:first-child{color:var(--text-2)}
+.help-row kbd{
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:3px;padding:1px 6px;font-size:10px;font-weight:500;
+  font-family:inherit;color:var(--text);
+}
+.help-section{
+  grid-column:1/-1;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--text-4);
+  margin-top:12px;padding-top:8px;border-top:1px dashed var(--border);
+}
+.help-section:first-child{margin-top:0;border-top:none;padding-top:0}
+
+/* Toast — single, bottom-left */
+.toast{
+  position:fixed;bottom:20px;left:20px;
+  background:var(--text);color:var(--bg);
+  padding:8px 14px;border-radius:6px;
+  font-size:12px;font-family:inherit;
+  display:flex;align-items:center;gap:10px;
+  z-index:300;
+  opacity:0;transform:translateY(10px);pointer-events:none;
+  transition:all var(--fade) var(--ease);
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+  max-width:360px;
+}
+.toast.show{opacity:1;transform:none;pointer-events:auto}
+.toast button{
+  background:rgba(255,255,255,.15);border:none;color:var(--bg);
+  padding:3px 9px;border-radius:4px;font-size:10px;font-weight:500;
+  cursor:pointer;font-family:inherit;
+}
+.toast button:hover{background:rgba(255,255,255,.25)}
+
+/* Responsive */
+@media(max-width:980px){
+  .grid{grid-template-columns:1fr 1fr;gap:32px}
+}
+@media(max-width:680px){
+  body{padding:16px 18px 100px}
+  .grid{grid-template-columns:1fr;gap:28px}
+  .brand{font-size:18px}
+  .topbar{gap:8px}
+  .tactions{opacity:1}
+  .drag-handle{display:none}
+  .handle{width:22px;height:24px}
+  .tool{padding:6px 10px}
+}
+
+/* Print */
+@media print{
+  body{background:white;color:black;padding:0}
+  .tools,.summary,.search-bar,.pin-bar .pin-unpin,.tactions,.ti-handles,
+  .tlist-sep,.briefing,.filter-chip,.storage-warning,.add-ghost,.tarrow{
+    display:none !important;
+  }
+  .grid{grid-template-columns:1fr 1fr 1fr;gap:24px}
+  .ti{padding-left:0;margin:0}
+  .tdet{max-height:none !important;overflow:visible !important}
+  .tnotes{color:#333}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-4)}
+
+/* Selection */
+::selection{background:rgba(42,39,36,.14)}
+:root.dark-theme ::selection{background:rgba(235,230,218,.18)}
+</style>
+</head>
+<body>
+
+<a href="#grid" class="skip-link">Skip to tasks</a>
+
+<!-- TOP BAR — minimal, text-first -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="brand">Tasks</div>
+    <div class="date" id="todayDate"></div>
+  </div>
+  <div class="tools">
+    <button class="tool" id="searchBtn" aria-label="Search"><span>Search</span><kbd>/</kbd></button>
+    <button class="tool" id="focusBtn" aria-label="Focus mode"><span>Focus</span><kbd>F</kbd></button>
+    <button class="tool" id="copyBtn" aria-label="Copy deliverables"><span class="tool-label">Deliverables</span></button>
+    <button class="tool" id="themeBtn" aria-label="Theme"><span id="themeIcon">◐</span></button>
+    <button class="tool" id="helpBtn" aria-label="Shortcuts"><span>Help</span><kbd>?</kbd></button>
+    <button class="tool" id="dataBtn" aria-label="Backup"><span class="tool-label">Data</span></button>
+    <button class="tool" id="setupBtn" aria-label="Mac shortcut"><span class="tool-label">Shortcut</span></button>
+    <button class="tool" id="qaBtn" aria-label="Quick add"><span class="tool-label">New</span><kbd id="qaKbd">⌘K</kbd></button>
+  </div>
+</div>
+
+<!-- BRIEFING — quiet one-liner -->
+<div class="briefing" id="briefing">
+  <div class="briefing-text" id="briefingText"></div>
+  <button class="briefing-close" id="briefingClose" aria-label="Dismiss">×</button>
+</div>
+
+<!-- PINNED -->
+<div class="pin-bar" id="pinBar">
+  <div class="pin-label">Pinned</div>
+  <div class="pin-name" id="pinName" title="Jump to task"></div>
+  <button class="pin-unpin" id="pinUnpin">unpin</button>
+</div>
+
+<!-- SUMMARY — replaces the metric card strip -->
+<div class="summary" id="summary"></div>
+
+<div class="search-bar" id="searchBar">
+  <input id="searchInput" placeholder="Search tasks, notes, tags…" aria-label="Search"/>
+  <button class="sc" id="searchClear" aria-label="Clear">×</button>
+</div>
+
+<div class="filter-chip" id="filterChip">
+  <span>Filtering: <b id="filterChipLabel"></b></span>
+  <button class="filter-chip-close" id="filterChipClose" aria-label="Clear">×</button>
+</div>
+
+<div class="storage-warning" id="storageWarn">Storage unavailable. Tasks won't persist across reloads.</div>
+
+<!-- GRID -->
+<div class="grid" id="grid">
+  <section class="quadrant" data-q="q1" aria-labelledby="q1-name">
+    <div class="qh">
+      <div class="qh-name" id="q1-name">Do first</div>
+      <span class="qh-sub">urgent &amp; important</span>
+      <span class="qh-count" id="c-q1">0</span>
+    </div>
+    <div class="tlist" id="l-q1" role="list"></div>
+    <div class="add-ghost" data-q="q1" tabindex="0" role="button" aria-label="Add task to Do first">
+      <span class="g-plus">+</span><span>New task</span>
+    </div>
+  </section>
+  <section class="quadrant" data-q="q2" aria-labelledby="q2-name">
+    <div class="qh">
+      <div class="qh-name" id="q2-name">Schedule</div>
+      <span class="qh-sub">important, not urgent</span>
+      <span class="qh-count" id="c-q2">0</span>
+    </div>
+    <div class="tlist" id="l-q2" role="list"></div>
+    <div class="add-ghost" data-q="q2" tabindex="0" role="button" aria-label="Add task to Schedule">
+      <span class="g-plus">+</span><span>New task</span>
+    </div>
+  </section>
+  <section class="quadrant" data-q="q3" aria-labelledby="q3-name">
+    <div class="qh">
+      <div class="qh-name" id="q3-name">Delegate</div>
+      <span class="qh-sub">urgent, not important</span>
+      <span class="qh-count" id="c-q3">0</span>
+    </div>
+    <div class="tlist" id="l-q3" role="list"></div>
+    <div class="add-ghost" data-q="q3" tabindex="0" role="button" aria-label="Add task to Delegate">
+      <span class="g-plus">+</span><span>New task</span>
+    </div>
+  </section>
+</div>
+
+<!-- Slash menu popover -->
+<div class="slash-menu" id="slashMenu" role="menu" aria-label="Quick actions"></div>
+
+<!-- Quick Add Modal -->
+<div class="modal-bg" id="moBg" role="dialog" aria-modal="true" aria-labelledby="moTitle">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mhead-left" id="moTitle">New task</div>
+      <button class="tool" id="pasteBtn" style="padding:4px 9px">Paste</button>
+    </div>
+    <div class="mbody">
+      <input class="minput" id="moIn" placeholder="What needs to be done?" autocomplete="off" aria-label="Task name"/>
+      <div class="mhint">Flags: <code>!d</code> deliverable · <code>!r</code> daily · <code>#tag</code> · paste multiple lines to add many at once</div>
+      <textarea class="mtxt" id="moNotes" placeholder="Notes (optional)" aria-label="Notes"></textarea>
+      <div class="mopts">
+        <button class="mqb a" data-mq="q1">Do first</button>
+        <button class="mqb" data-mq="q2">Schedule</button>
+        <button class="mqb" data-mq="q3">Delegate</button>
+        <div class="mdiv"></div>
+        <button class="mtb" id="moDeliv">Deliverable</button>
+        <button class="mtb" id="moRecur">Daily</button>
+      </div>
+    </div>
+    <div class="mfoot">
+      <span class="mfoot-hint"><kbd>↵</kbd> add · <kbd>⌘1-3</kbd> quadrant · <kbd>Tab</kbd> notes · <kbd>Esc</kbd> close</span>
+      <button class="msubmit" id="moSubmit">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup Modal -->
+<div class="modal-bg" id="setupBg" role="dialog" aria-modal="true">
+  <div class="modal" style="width:640px">
+    <div class="mhead"><div class="mhead-left">Mac-wide shortcut</div></div>
+    <div class="setup-body">
+      <div class="setup-tabs">
+        <button class="setup-tab active" data-tab="raycast">Raycast</button>
+        <button class="setup-tab" data-tab="shortcuts">Shortcuts.app</button>
+        <button class="setup-tab" data-tab="services">Services menu</button>
+        <button class="setup-tab" data-tab="urls">URL reference</button>
+        <button class="setup-tab" data-tab="hyperkey">Hyperkey</button>
+      </div>
+      <div class="setup-pane active" data-pane="raycast">
+        <h4>Raycast Quicklink — the fast path</h4>
+        <ol>
+          <li>Install <a href="https://raycast.com" target="_blank" rel="noopener">Raycast</a> (free)</li>
+          <li>Open Raycast → Settings → Extensions → Quicklinks → +</li>
+          <li>Name: <code>Tasks — Quick Add</code></li>
+          <li>Paste this URL (contains <code>{Query}</code> placeholder):</li>
+        </ol>
+        <div class="setup-url" id="setupUrlQA" data-hint="copy">…</div>
+        <ol start="5">
+          <li>Bind to a hotkey (e.g. <code>⌃⌥⌘T</code> or double-tap ⌘)</li>
+          <li>Now anywhere on your Mac: hotkey → type task → Enter → added to Q1</li>
+        </ol>
+        <h4>Plain open (no pre-fill)</h4>
+        <div class="setup-url" id="setupUrlPlain" data-hint="copy">…</div>
+      </div>
+      <div class="setup-pane" data-pane="shortcuts">
+        <h4>macOS Shortcuts.app</h4>
+        <ol>
+          <li>Open Shortcuts.app → + to create new</li>
+          <li>Add "Ask for Input" (prompt: "Task?", type: Text)</li>
+          <li>Add "URL" action →</li>
+        </ol>
+        <div class="setup-url" id="setupUrlShortcut" data-hint="copy">…</div>
+        <ol start="4">
+          <li>Add "Open URLs" action below</li>
+          <li>In the shortcut info panel, set a keyboard shortcut</li>
+          <li>Replace <code>PROVIDED_INPUT</code> with the "Provided Input" variable from step 2</li>
+        </ol>
+      </div>
+      <div class="setup-pane" data-pane="services">
+        <h4>Services menu — add selected text from any app</h4>
+        <p>Select text anywhere → right-click → Services → Add to Tasks</p>
+        <ol>
+          <li>Open Shortcuts.app → +</li>
+          <li>In the right panel: enable "Use as Quick Action" → check "Services Menu"</li>
+          <li>Input: Text from any app</li>
+          <li>Add "URL Encode" action with input = Shortcut Input</li>
+          <li>Add "URL" →</li>
+        </ol>
+        <div class="setup-url" id="setupUrlService" data-hint="copy">…</div>
+        <ol start="6">
+          <li>Replace <code>ENCODED_INPUT</code> with the URL-encoded variable</li>
+          <li>Add "Open URLs"</li>
+          <li>Right-click selected text anywhere → Services → your shortcut</li>
+        </ol>
+      </div>
+      <div class="setup-pane" data-pane="urls">
+        <h4>URL parameters</h4>
+        <p>All optional, all combinable.</p>
+        <div style="font-size:12px;line-height:2">
+          <div><code>?quickadd=1</code> — open quick-add modal</div>
+          <div><code>&amp;text=your+task</code> — pre-fill task name (URL-encoded)</div>
+          <div><code>&amp;notes=details</code> — pre-fill notes</div>
+          <div><code>&amp;q=q1</code> (or q2/q3) — select quadrant</div>
+          <div><code>&amp;d=1</code> — mark as deliverable</div>
+          <div><code>&amp;r=1</code> — mark as daily recurring</div>
+          <div><code>&amp;silent=1</code> — add directly without showing modal</div>
+          <div><code>?focus=q1</code> (or q2/q3) — open matrix with that quadrant's inline add focused</div>
+        </div>
+        <h4>Example: silent add to Q1 as deliverable</h4>
+        <div class="setup-url" id="setupUrlExample" data-hint="copy">…</div>
+      </div>
+      <div class="setup-pane" data-pane="hyperkey">
+        <h4>Hyperkey — open matrix with inline add ready</h4>
+        <p>A <em>hyperkey</em> is Caps Lock remapped to ⌘⌃⌥⇧ via <a href="https://karabiner-elements.pqrs.org" target="_blank" rel="noopener">Karabiner-Elements</a> or BetterTouchTool. Pair it with a Raycast Quicklink to open the matrix with a quadrant pre-focused — no modal, just start typing.</p>
+        <h4>Raycast Quicklinks (one per quadrant)</h4>
+        <p>Raycast → Settings → Extensions → Quicklinks → +. No <code>{Query}</code> placeholder — just opens and focuses.</p>
+        <div style="font-size:12px;margin-bottom:4px;color:var(--text-2)">Q1 — Do First (urgent &amp; important)</div>
+        <div class="setup-url" id="setupUrlFocusQ1" data-hint="copy">…</div>
+        <div style="font-size:12px;margin:8px 0 4px;color:var(--text-2)">Q2 — Schedule (important, not urgent)</div>
+        <div class="setup-url" id="setupUrlFocusQ2" data-hint="copy">…</div>
+        <div style="font-size:12px;margin:8px 0 4px;color:var(--text-2)">Q3 — Delegate (urgent, not important)</div>
+        <div class="setup-url" id="setupUrlFocusQ3" data-hint="copy">…</div>
+        <h4>Karabiner-Elements setup</h4>
+        <ol>
+          <li>Install <a href="https://karabiner-elements.pqrs.org" target="_blank" rel="noopener">Karabiner-Elements</a></li>
+          <li>Import the "Hyper Key" complex modification (Caps Lock → ⌘⌃⌥⇧)</li>
+          <li>In Raycast, bind your Q1 Quicklink to e.g. Hyper+T</li>
+          <li>Anywhere on Mac: Hyper+T → matrix opens → Q1 add is live → type → Enter</li>
+        </ol>
+        <h4>In-app shortcuts (when matrix is already open)</h4>
+        <p><kbd>Shift+1</kbd> → Q1 add &nbsp;·&nbsp; <kbd>Shift+2</kbd> → Q2 add &nbsp;·&nbsp; <kbd>Shift+3</kbd> → Q3 add</p>
+      </div>
+    </div>
+    <div class="mfoot">
+      <span class="mfoot-hint"><kbd>Esc</kbd> close</span>
+      <button class="msubmit" id="setupClose">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Keyboard help -->
+<div class="modal-bg" id="helpBg" role="dialog" aria-modal="true">
+  <div class="modal" style="width:580px">
+    <div class="mhead"><div class="mhead-left">Keyboard shortcuts</div></div>
+    <div class="mbody">
+      <div class="help-grid">
+        <div class="help-section">Global</div>
+        <div class="help-row"><span>Quick add</span><kbd id="helpK1">⌘K</kbd></div>
+        <div class="help-row"><span>Search</span><kbd>/</kbd></div>
+        <div class="help-row"><span>Focus mode</span><kbd>F</kbd></div>
+        <div class="help-row"><span>Help</span><kbd>?</kbd></div>
+        <div class="help-row"><span>Undo</span><kbd id="helpK2">⌘Z</kbd></div>
+        <div class="help-row"><span>Theme</span><kbd>T</kbd></div>
+        <div class="help-row"><span>Print</span><kbd id="helpK3">⌘P</kbd></div>
+        <div class="help-row"><span>Close / clear</span><kbd>Esc</kbd></div>
+
+        <div class="help-section">Add tasks</div>
+        <div class="help-row"><span>Focus add-row (current Q)</span><kbd>N</kbd></div>
+        <div class="help-row"><span>Focus Q1 / Q2 / Q3 add</span><kbd>⇧1 / ⇧2 / ⇧3</kbd></div>
+        <div class="help-row"><span>Slash menu (in add)</span><kbd>/</kbd></div>
+        <div class="help-row"><span>Add &amp; next</span><kbd>↵</kbd></div>
+        <div class="help-row"><span>Add &amp; exit</span><kbd>⌘↵</kbd></div>
+        <div class="help-row"><span>Exit add row</span><kbd>Esc</kbd></div>
+
+        <div class="help-section">Navigate</div>
+        <div class="help-row"><span>Next task</span><kbd>J</kbd></div>
+        <div class="help-row"><span>Previous task</span><kbd>K</kbd></div>
+        <div class="help-row"><span>Next quadrant</span><kbd>L</kbd></div>
+        <div class="help-row"><span>Previous quadrant</span><kbd>H</kbd></div>
+
+        <div class="help-section">Focused task</div>
+        <div class="help-row"><span>Toggle complete</span><kbd>X</kbd></div>
+        <div class="help-row"><span>Edit</span><kbd>E</kbd></div>
+        <div class="help-row"><span>Expand notes</span><kbd>O</kbd></div>
+        <div class="help-row"><span>Delete</span><kbd>D</kbd></div>
+        <div class="help-row"><span>Pin</span><kbd>P</kbd></div>
+        <div class="help-row"><span>Toggle deliverable</span><kbd>M</kbd></div>
+        <div class="help-row"><span>Slash menu</span><kbd>/</kbd></div>
+        <div class="help-row"><span>Move up/down</span><kbd>Alt ↑↓</kbd></div>
+        <div class="help-row"><span>Move to Q1/2/3</span><kbd>1/2/3</kbd></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <span class="mfoot-hint"><kbd>?</kbd> toggle</span>
+      <button class="msubmit" id="helpClose">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Modal -->
+<div class="modal-bg" id="dataBg" role="dialog" aria-modal="true">
+  <div class="modal" style="width:620px">
+    <div class="mhead"><div class="mhead-left">Backup &amp; transfer</div></div>
+    <div style="padding:16px 22px;overflow-y:auto">
+      <div style="margin-bottom:18px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Export</div>
+        <p style="font-size:11px;color:var(--text-3);margin-bottom:10px">Download, copy, or export as markdown. <b id="autoBackupStatus"></b></p>
+        <div style="display:flex;gap:6px">
+          <button class="mqb" id="dataCopyBtn" style="flex:1;padding:8px;font-size:12px">Copy JSON</button>
+          <button class="mqb" id="dataDownloadBtn" style="flex:1;padding:8px;font-size:12px">Download</button>
+          <button class="mqb" id="dataMdBtn" style="flex:1;padding:8px;font-size:12px">Markdown</button>
+        </div>
+        <div id="dataCopyCount" style="font-size:10px;color:var(--text-4);text-align:center;margin-top:8px"></div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:18px 0"></div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Import</div>
+        <p style="font-size:11px;color:var(--text-3);margin-bottom:10px">Paste JSON or drop a <code>.json</code> file. Merge keeps existing tasks; replace wipes everything.</p>
+        <textarea id="dataImportArea" style="width:100%;min-height:90px;max-height:200px;resize:vertical;background:var(--surface-2);border:1px dashed var(--border);border-radius:6px;padding:10px 13px;font-size:11px;font-family:'SF Mono',monospace;outline:none;line-height:1.55;margin-bottom:10px;color:var(--text)" placeholder="Paste JSON or drop a .json file here…"></textarea>
+        <div style="display:flex;gap:6px">
+          <button class="msubmit" id="dataImportBtn" style="flex:1">Merge (safe)</button>
+          <button class="msubmit secondary" id="dataReplaceBtn" style="flex:1">Replace all</button>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:18px 0"></div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px;color:var(--danger)">Danger zone</div>
+        <p style="font-size:11px;color:var(--text-3);margin-bottom:10px">Wipe everything, keep only seed tasks.</p>
+        <button class="mqb" id="dataBankruptcyBtn" style="width:100%;padding:8px;font-size:12px;color:var(--danger);border-color:var(--danger-soft)">Declare task bankruptcy</button>
+      </div>
+    </div>
+    <div class="mfoot"><span class="mfoot-hint"><kbd>Esc</kbd> close</span><button class="msubmit" id="dataClose">Done</button></div>
+  </div>
+</div>
+
+<div class="toast" id="undoToast"><span id="undoMsg"></span><button id="undoBtn">Undo</button></div>
+<div class="toast" id="infoToast"><span id="infoMsg"></span></div>
+
+<script>
+"use strict";
+
+// ═══════════════════════════════════════════════════════════════
+//  Platform detection + constants
+// ═══════════════════════════════════════════════════════════════
+const IS_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+const MOD_KEY = IS_MAC ? '⌘' : 'Ctrl';
+
+function updatePlatformLabels(){
+  if(!IS_MAC){
+    const qa = document.getElementById('qaKbd'); if(qa) qa.textContent = 'Ctrl+K';
+    const h1 = document.getElementById('helpK1'); if(h1) h1.textContent = 'Ctrl+K';
+    const h2 = document.getElementById('helpK2'); if(h2) h2.textContent = 'Ctrl+Z';
+    const h3 = document.getElementById('helpK3'); if(h3) h3.textContent = 'Ctrl+P';
+  }
+}
+updatePlatformLabels();
+
+const Q = ['q1','q2','q3'];
+const Q_NAMES = {q1:'Do first', q2:'Schedule', q3:'Delegate'};
+const SK = 'task_mgr_v5';
+const PK = 'task_mgr_prefs_v3';  // bumped for v3 (paper layout prefs)
+const LEGACY_KEYS = ['task_mgr_v4','task_manager_v3','eisenhower_tasks_v2','eisenhower_tasks'];
+const SCHEMA_VERSION = 5;
+const STALE_DAYS_Q1 = 5;
+const STALE_DAYS_OTHER = 14;
+const Q1_OVERLOAD = 7;
+
+// ═══════════════════════════════════════════════════════════════
+//  Storage availability
+// ═══════════════════════════════════════════════════════════════
+let storageOk = false;
+try{
+  const k = '__t_' + Math.random();
+  localStorage.setItem(k, '1');
+  storageOk = localStorage.getItem(k) === '1';
+  localStorage.removeItem(k);
+}catch{ storageOk = false; }
+
+// ═══════════════════════════════════════════════════════════════
+//  Seed data (same as v2 — your imported tasks)
+// ═══════════════════════════════════════════════════════════════
+const SEED_DATA = {
+  q1:[
+    {id:"s1_gated",name:"Understand all the Gated journies to the T",completed:false,notes:"",createdAt:"2026-04-16T14:57:00.000Z",deliverable:false,recurring:false},
+    {id:"mo11p3ht0qh72",name:"Balaji tasks to be added to my task list",completed:false,notes:"1. make the Cart editable\n2. make quotations editable\n3. Show recent quotations\nO",createdAt:"2026-04-16T05:35:02.897Z",deliverable:false,recurring:false},
+    {id:"mo11pduokvhc5",name:"Complete phase 1 of TP",completed:false,notes:"",createdAt:"2026-04-16T05:35:16.320Z",deliverable:false,recurring:false},
+    {id:"mo11piku23j19",name:"Read all emails for AU",completed:false,notes:"",createdAt:"2026-04-16T05:35:22.446Z",deliverable:true,recurring:false},
+    {id:"mo154sn7qpcj3",name:"Our margin should not be eaten up by stripe because of currency, what currency are we making live? Talk to ADIB.",completed:false,notes:"",createdAt:"2026-04-16T07:11:14.179Z",deliverable:false,recurring:false},
+    {id:"s6_siloam",name:"Look at the inscopes and out of scopes of the Siloam",completed:false,notes:"Kya chalra hai karte raho, mujhe bas up to date rakho\n\nThey have to mark each booking ID as complete in my self service portal to get payment.\n\nDeeplink for",createdAt:"2026-04-16T07:18:00.000Z",deliverable:false,recurring:false},
+    {id:"s7_adib_mrp",name:"talk to adib for mrp and discounted pricing",completed:false,notes:"",createdAt:"2026-04-16T07:26:00.000Z",deliverable:false,recurring:false},
+    {id:"s8_matrix",name:"Matrix APIs",completed:false,notes:"1. Should be Downloadbe QR code to activate and use on the same device.\n2.",createdAt:"2026-04-16T08:41:00.000Z",deliverable:false,recurring:false},
+    {id:"s9_esim",name:"ESIM API \u2013",completed:false,notes:"UI Journey\nEdge Cases\nccl",createdAt:"2026-04-16T09:02:00.000Z",deliverable:false,recurring:false},
+    {id:"s10_sangeeta",name:"Sangeeta 2rupee refund reply",completed:false,notes:"",createdAt:"2026-04-16T13:31:00.000Z",deliverable:false,recurring:false},
+    {id:"mo11p8s53zy1m",name:"Sit with ADitya",completed:true,notes:"",createdAt:"2026-04-16T05:35:09.749Z",deliverable:true,recurring:false,completedAt:"2026-04-16T13:35:00.000Z"}
+  ],
+  q2:[
+    {id:"mo12kusjm641j",name:"Sit with Shekhar and understand 5%-18% tax on cabs service.",completed:false,notes:"",createdAt:"2026-04-16T05:59:44.611Z",deliverable:false,recurring:false},
+    {id:"mo12l02o3n7wu",name:"Setup call with ANkit and Tripare",completed:false,notes:"",createdAt:"2026-04-16T05:59:51.456Z",deliverable:false,recurring:false},
+    {id:"mo12qjetqme1j",name:"IDFC INAP for AT, and Check eligibity with spend also",completed:false,notes:"x",createdAt:"2026-04-16T06:04:09.797Z",deliverable:false,recurring:false},
+    {id:"mo14xejz7i26c",name:"email meenakshi for Product and tester",completed:false,notes:"",createdAt:"2026-04-16T07:05:29.327Z",deliverable:false,recurring:false}
+  ],
+  q3:[]
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  Utilities
+// ═══════════════════════════════════════════════════════════════
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function nowIso(){ return new Date().toISOString(); }
+function genId(){ return Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
+function esc(t){ const d=document.createElement('div'); d.textContent=t||''; return d.innerHTML; }
+function daysBetween(fromDateStr, toDateStr){
+  if(!fromDateStr) return 0;
+  const a = new Date(fromDateStr + (fromDateStr.includes('T')?'':'T00:00:00'));
+  const b = new Date(toDateStr + 'T00:00:00');
+  return Math.floor((b - a) / 86400000);
+}
+function daysAgo(dateStr){ return daysBetween(dateStr, todayStr()); }
+function fmtDate(){
+  const d=new Date(), days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]}, ${mos[d.getMonth()]} ${d.getDate()}`;
+}
+function fmtTime(iso){
+  if(!iso) return '';
+  const d=new Date(iso); if(isNaN(d)) return '';
+  const h=d.getHours(), m=String(d.getMinutes()).padStart(2,'0');
+  return `${h%12||12}:${m}${h>=12?'pm':'am'}`;
+}
+function emptyState(){
+  return { q1:[], q2:[], q3:[], lastDate: todayStr(), pinId: null, pinQ: null,
+           seededDeleted: [], schemaVersion: SCHEMA_VERSION, lastBackup: null };
+}
+function normalizeTask(t){
+  if(!t || typeof t !== 'object') return null;
+  return {
+    id: t.id || genId(),
+    name: String(t.name || 'Untitled').slice(0, 500),
+    completed: !!t.completed,
+    completedToday: !!t.completedToday,
+    open: !!t.open,
+    notes: String(t.notes || '').slice(0, 10000),
+    createdAt: t.createdAt || null,
+    deliverable: !!t.deliverable,
+    recurring: !!t.recurring,
+    carried: !!t.carried,
+    carriedFrom: t.carriedFrom || null,
+    completedAt: t.completedAt || null,
+    dueDate: t.dueDate || null,
+    estimate: t.estimate || null,
+    tags: Array.isArray(t.tags) ? t.tags : []
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Load / save
+// ═══════════════════════════════════════════════════════════════
+function load(){
+  if(!storageOk) return emptyState();
+  let raw = localStorage.getItem(SK);
+  let migratedFrom = null;
+  if(!raw){
+    for(const lk of LEGACY_KEYS){
+      raw = localStorage.getItem(lk);
+      if(raw){ migratedFrom = lk; break; }
+    }
+  }
+  if(!raw){
+    const seed = emptyState();
+    for(const q of Q){
+      if(SEED_DATA[q]) seed[q] = SEED_DATA[q].map(normalizeTask).filter(Boolean);
+    }
+    try{ localStorage.setItem(SK, JSON.stringify(seed)); }catch{}
+    return seed;
+  }
+  let parsed;
+  try{ parsed = JSON.parse(raw); }catch{ return emptyState(); }
+  if(!parsed || typeof parsed !== 'object') return emptyState();
+  const data = emptyState();
+  for(const q of Q){
+    if(Array.isArray(parsed[q])) data[q] = parsed[q].map(normalizeTask).filter(Boolean);
+  }
+  data.lastDate = parsed.lastDate || todayStr();
+  data.pinId = parsed.pinId || null;
+  data.pinQ = parsed.pinQ || null;
+  data.seededDeleted = Array.isArray(parsed.seededDeleted) ? parsed.seededDeleted : [];
+  data.schemaVersion = parsed.schemaVersion || 1;
+  data.lastBackup = parsed.lastBackup || null;
+  if(migratedFrom){
+    try{
+      localStorage.setItem(SK, JSON.stringify(data));
+      for(const lk of LEGACY_KEYS){ try{ localStorage.removeItem(lk); }catch{} }
+    }catch{}
+  }
+  return data;
+}
+
+function loadPrefs(){
+  const defaults = { lastQ: 'q1', sound: true, theme: 'light', hideCompleted: false,
+                     briefingDismissedDate: null, focusMode: false, focusedQ: 'q1',
+                     hintShown: false };
+  if(!storageOk) return defaults;
+  try{
+    const s = localStorage.getItem(PK);
+    return s ? { ...defaults, ...JSON.parse(s) } : defaults;
+  }catch{ return defaults; }
+}
+
+let saveTimer = null;
+function save(){
+  if(!storageOk) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(SK, JSON.stringify(tasks)); }
+    catch(e){ console.error('Save failed', e); toast('Save failed — out of storage?'); }
+  }, 300);
+}
+function saveNow(){
+  if(!storageOk) return;
+  clearTimeout(saveTimer);
+  try{ localStorage.setItem(SK, JSON.stringify(tasks)); }catch{}
+}
+function savePrefs(){
+  if(!storageOk) return;
+  try{ localStorage.setItem(PK, JSON.stringify(prefs)); }catch{}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  State init
+// ═══════════════════════════════════════════════════════════════
+let tasks = load();
+let prefs = loadPrefs();
+
+if(!storageOk) document.getElementById('storageWarn').classList.add('show');
+
+function applyTheme(){
+  const root = document.documentElement;
+  root.classList.remove('dark-theme');
+  if(prefs.theme === 'dark') root.classList.add('dark-theme');
+  else if(prefs.theme === 'auto'){
+    if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+      root.classList.add('dark-theme');
+    }
+  }
+  const icon = document.getElementById('themeIcon');
+  if(icon) icon.textContent = prefs.theme === 'dark' ? '☀' : (prefs.theme === 'auto' ? '◐' : '☾');
+}
+applyTheme();
+
+// Seed merge respecting deletions (same logic as v2)
+(function mergeSeed(){
+  const existingIds = new Set();
+  Q.forEach(q => tasks[q].forEach(t => existingIds.add(t.id)));
+  const deletedSet = new Set(tasks.seededDeleted || []);
+  let added = 0, noteFilled = 0;
+  for(const q of Q){
+    if(!SEED_DATA[q]) continue;
+    for(const raw of SEED_DATA[q]){
+      const st = normalizeTask(raw);
+      if(!st) continue;
+      if(deletedSet.has(st.id)) continue;
+      if(existingIds.has(st.id)){
+        const existing = tasks[q].find(t => t.id === st.id);
+        if(existing && st.notes && !existing.notes){ existing.notes = st.notes; noteFilled++; }
+      }else{
+        const byName = tasks[q].find(t => t.name === st.name);
+        if(byName){
+          if(st.notes && !byName.notes){ byName.notes = st.notes; noteFilled++; }
+        }else{
+          tasks[q].push(st);
+          added++;
+        }
+      }
+    }
+  }
+  if(added > 0 || noteFilled > 0) save();
+})();
+
+// Rollover
+function rollover(){
+  const today = todayStr();
+  if(tasks.lastDate === today) return;
+  for(const q of Q){
+    const recurringToAdd = [];
+    for(const t of tasks[q]){
+      if(t.completedToday) t.completedToday = false;
+      if(!t.completed && !t.carried){
+        const createdDate = (t.createdAt || '').split('T')[0];
+        if(createdDate && createdDate < today){
+          t.carried = true;
+          t.carriedFrom = createdDate;
+        }
+      }
+      if(t.recurring && t.completed){
+        recurringToAdd.push({
+          id: genId(), name: t.name, completed: false, completedToday: false,
+          open: false, notes: t.notes || '', createdAt: nowIso(),
+          deliverable: !!t.deliverable, recurring: true, carried: false, carriedFrom: null,
+          completedAt: null, dueDate: null, estimate: t.estimate || null,
+          tags: Array.isArray(t.tags) ? [...t.tags] : []
+        });
+      }
+    }
+    tasks[q] = tasks[q].filter(t => !(t.recurring && t.completed));
+    tasks[q].unshift(...recurringToAdd);
+  }
+  tasks.lastDate = today;
+  saveNow();
+}
+rollover();
+setInterval(()=>{
+  const t = todayStr();
+  if(tasks.lastDate !== t){
+    rollover();
+    renderAll();
+  }
+}, 60000);
+
+// Cross-tab sync
+window.addEventListener('storage', e => {
+  if(e.key === SK && e.newValue){
+    try{
+      tasks = load();
+      renderAll();
+      toast('Synced from another tab');
+    }catch{}
+  }
+});
+window.addEventListener('beforeunload', saveNow);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveNow(); });
+
+// ═══════════════════════════════════════════════════════════════
+//  Toast — single, calm
+// ═══════════════════════════════════════════════════════════════
+let infoToastTimer = null;
+function toast(msg, dur=2000){
+  const t = document.getElementById('infoToast');
+  document.getElementById('infoMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(infoToastTimer);
+  infoToastTimer = setTimeout(()=> t.classList.remove('show'), dur);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Undo stack
+// ═══════════════════════════════════════════════════════════════
+const undoStack = [];
+const UNDO_MAX = 20;
+let undoToastTimer = null;
+function pushUndo(action){
+  undoStack.push(action);
+  if(undoStack.length > UNDO_MAX) undoStack.shift();
+  showUndoToast(action.label);
+}
+function showUndoToast(label){
+  const t = document.getElementById('undoToast');
+  document.getElementById('undoMsg').textContent = label;
+  t.classList.add('show');
+  clearTimeout(undoToastTimer);
+  undoToastTimer = setTimeout(()=> t.classList.remove('show'), 5000);
+}
+function performUndo(){
+  if(undoStack.length === 0){ toast('Nothing to undo'); return; }
+  const action = undoStack.pop();
+  try{
+    action.undo();
+    document.getElementById('undoToast').classList.remove('show');
+    toast(`Undone: ${action.label}`);
+  }catch(e){ console.error('Undo failed', e); toast('Undo failed'); }
+}
+document.getElementById('undoBtn').addEventListener('click', performUndo);
+
+function playSound(){
+  if(!prefs.sound) return;
+  try{
+    const c = new (window.AudioContext || window.webkitAudioContext)();
+    const o = c.createOscillator(), g = c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.frequency.value = 720;
+    g.gain.setValueAtTime(.04, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .1);
+    o.start(); o.stop(c.currentTime + .1);
+  }catch{}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Parse input — flags + tags
+// ═══════════════════════════════════════════════════════════════
+function parseInput(s){
+  let n = String(s || ''), d = false, r = false;
+  const tags = [];
+  n = n.replace(/#([a-zA-Z0-9_-]+)/g, (_, tag) => { tags.push(tag.toLowerCase()); return ''; });
+  if(/(^|\s)!d(eliverable)?(?=\s|$)/i.test(n)){
+    d = true;
+    n = n.replace(/(^|\s)!d(eliverable)?(?=\s|$)/i, ' ');
+  }
+  if(/(^|\s)(!r(ecurring)?|!daily)(?=\s|$)/i.test(n)){
+    r = true;
+    n = n.replace(/(^|\s)(!r(ecurring)?|!daily)(?=\s|$)/i, ' ');
+  }
+  return { name: n.trim().replace(/\s+/g,' '), d, r, tags: [...new Set(tags)] };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Helpers — sort, stale, focus state
+// ═══════════════════════════════════════════════════════════════
+function sorted(q){
+  const a = tasks[q].filter(t => !t.completed);
+  const d = tasks[q].filter(t => t.completed);
+  return { active: a, done: d };
+}
+function isStale(t, q){
+  if(t.completed || !t.carried || !t.carriedFrom) return false;
+  const days = daysAgo(t.carriedFrom);
+  if(q === 'q1' && days >= STALE_DAYS_Q1) return true;
+  if(q !== 'q1' && days >= STALE_DAYS_OTHER) return true;
+  return false;
+}
+
+// Keep track of task being edited / expanded / kbd-focused
+let focId = null, focPos = null;
+let kbdFocusedId = null, kbdFocusedQ = null;
+
+function autoR(ta){
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 400) + 'px';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Pin
+// ═══════════════════════════════════════════════════════════════
+function updatePin(){
+  const bar = document.getElementById('pinBar');
+  if(!tasks.pinId || !tasks.pinQ){ bar.classList.remove('show'); return; }
+  const qArr = tasks[tasks.pinQ];
+  if(!qArr){ tasks.pinId = null; tasks.pinQ = null; save(); bar.classList.remove('show'); return; }
+  const t = qArr.find(x => x.id === tasks.pinId);
+  if(!t){ tasks.pinId = null; tasks.pinQ = null; save(); bar.classList.remove('show'); return; }
+  const nameEl = document.getElementById('pinName');
+  nameEl.textContent = t.name;
+  nameEl.classList.toggle('done', t.completed);
+  bar.classList.add('show');
+}
+document.getElementById('pinUnpin').addEventListener('click', ()=>{
+  tasks.pinId = null; tasks.pinQ = null; save(); updatePin();
+});
+document.getElementById('pinName').addEventListener('click', ()=>{
+  if(!tasks.pinId) return;
+  const el = document.querySelector(`.ti[data-id="${tasks.pinId}"]`);
+  if(el){
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.classList.add('kbd-focused');
+    kbdFocusedId = tasks.pinId; kbdFocusedQ = tasks.pinQ;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  moveToQuadrant + reorder (with FLIP)
+// ═══════════════════════════════════════════════════════════════
+function flipSwap(list, orderIds){
+  const items = Array.from(list.querySelectorAll('.ti'));
+  const pos = new Map();
+  items.forEach(el => pos.set(el.dataset.id, el.getBoundingClientRect().top));
+  orderIds.forEach(id => {
+    const el = list.querySelector(`[data-id="${id}"]`);
+    if(el) list.appendChild(el);
+  });
+  Array.from(list.querySelectorAll('.ti')).forEach(el => {
+    const oldTop = pos.get(el.dataset.id);
+    if(oldTop === undefined) return;
+    const newTop = el.getBoundingClientRect().top;
+    const d = oldTop - newTop;
+    if(!d) return;
+    el.style.transform = `translateY(${d}px)`;
+    el.style.transition = 'none';
+    requestAnimationFrame(()=>{
+      el.style.transition = 'transform 220ms cubic-bezier(.4,0,.2,1)';
+      el.style.transform = '';
+      setTimeout(()=>{ el.style.transition = ''; el.style.transform = ''; }, 240);
+    });
+  });
+}
+function moveTask(q, id, dir){
+  const arr = tasks[q];
+  const idx = arr.findIndex(t => t.id === id);
+  if(idx === -1) return;
+  const t = arr[idx], si = idx + dir;
+  if(si < 0 || si >= arr.length) return;
+  if(arr[si].completed !== t.completed) return;
+  [arr[si], arr[idx]] = [arr[idx], arr[si]];
+  save();
+  const list = document.getElementById('l-' + q);
+  const s = sorted(q), order = [...s.active, ...s.done].map(x => x.id);
+  flipSwap(list, order);
+}
+function moveToQuadrant(fromQ, id, toQ){
+  if(fromQ === toQ) return;
+  const idx = tasks[fromQ].findIndex(t => t.id === id);
+  if(idx === -1) return;
+  const [task] = tasks[fromQ].splice(idx, 1);
+  tasks[toQ].unshift(task);
+  save();
+  renderQ(fromQ); renderQ(toQ);
+  updateSummary(); updateTitle(); updatePin();
+  kbdFocusedId = id; kbdFocusedQ = toQ;
+  highlightKbdFocused();
+  toast(`Moved to ${Q_NAMES[toQ]}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Drag-drop (simpler indicator than v2 — single hairline)
+// ═══════════════════════════════════════════════════════════════
+let dragTask = null, dragSrcQ = null;
+
+function setupDrag(div, task, q){
+  const h = div.querySelector('.drag-handle');
+  if(!h) return;
+  h.setAttribute('draggable','true');
+  h.addEventListener('dragstart', e => {
+    dragTask = task; dragSrcQ = q;
+    div.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', task.id);
+    try{
+      const r = div.getBoundingClientRect();
+      e.dataTransfer.setDragImage(div, e.clientX - r.left, e.clientY - r.top);
+    }catch{}
+  });
+  h.addEventListener('dragend', ()=>{
+    div.classList.remove('dragging');
+    document.querySelectorAll('.quadrant').forEach(q => {
+      const i = q.querySelector('.drop-ind'); if(i) i.remove();
+    });
+    dragTask = null; dragSrcQ = null;
+  });
+}
+
+document.querySelectorAll('.quadrant').forEach(qEl => {
+  const qn = qEl.dataset.q;
+  qEl.addEventListener('dragover', e => {
+    if(!dragTask) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    updDropInd(qEl, e.clientY);
+  });
+  qEl.addEventListener('dragleave', e => {
+    if(!qEl.contains(e.relatedTarget)){
+      const i = qEl.querySelector('.drop-ind'); if(i) i.remove();
+    }
+  });
+  qEl.addEventListener('drop', e => {
+    e.preventDefault();
+    const i = qEl.querySelector('.drop-ind'); if(i) i.remove();
+    if(!dragTask || !dragSrcQ) return;
+    const tgt = e.target.closest('.ti');
+    let ii = -1;
+    if(tgt && tgt.dataset.id !== dragTask.id){
+      const r = tgt.getBoundingClientRect();
+      const ti = tasks[qn].findIndex(t => t.id === tgt.dataset.id);
+      if(ti !== -1) ii = e.clientY < r.top + r.height/2 ? ti : ti + 1;
+    }
+    const same = dragSrcQ === qn;
+    const list = document.getElementById('l-' + qn);
+    if(same){
+      const ci = tasks[qn].findIndex(t => t.id === dragTask.id);
+      const [rm] = tasks[qn].splice(ci, 1);
+      let fi = ii;
+      if(ii === -1) tasks[qn].push(rm);
+      else { if(ci < ii) fi = ii - 1; tasks[qn].splice(fi, 0, rm); }
+      save();
+      const s = sorted(qn), order = [...s.active, ...s.done].map(x => x.id);
+      flipSwap(list, order);
+    }else{
+      tasks[dragSrcQ] = tasks[dragSrcQ].filter(t => t.id !== dragTask.id);
+      if(ii === -1) tasks[qn].push(dragTask);
+      else tasks[qn].splice(ii, 0, dragTask);
+      save();
+      renderQ(dragSrcQ); renderQ(qn);
+      updateSummary(); updateTitle();
+    }
+    dragTask = null; dragSrcQ = null;
+  });
+});
+
+function updDropInd(qEl, y){
+  const list = qEl.querySelector('.tlist');
+  if(!list) return;
+  const existing = qEl.querySelector('.drop-ind');
+  if(existing) existing.remove();
+  const items = Array.from(list.querySelectorAll('.ti:not(.dragging)'));
+  const ind = document.createElement('div');
+  ind.className = 'drop-ind';
+  let ins = false;
+  for(const it of items){
+    const r = it.getBoundingClientRect();
+    if(y < r.top + r.height/2){
+      list.insertBefore(ind, it);
+      ins = true; break;
+    }
+  }
+  if(!ins) list.appendChild(ind);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Render task row (Notion-style — no cards)
+// ═══════════════════════════════════════════════════════════════
+function mkTask(task, q){
+  const div = document.createElement('div');
+  div.className = 'ti';
+  div.dataset.id = task.id;
+  div.dataset.q = q;
+  div.setAttribute('role','listitem');
+  if(isStale(task, q)) div.classList.add('stale');
+
+  const hasNotes = task.notes && task.notes.trim();
+  const arrowClass = 'tarrow' + (task.open ? ' open' : '') + (hasNotes ? ' has-notes' : ' empty');
+
+  // Meta items
+  const metaParts = [];
+  if(task.deliverable) metaParts.push('<span class="m-item m-deliv">deliverable</span>');
+  if(task.recurring) metaParts.push('<span class="m-item m-recur">· daily</span>');
+  if(task.carried && task.carriedFrom){
+    const days = daysAgo(task.carriedFrom);
+    const label = days <= 1 ? '1 day ago' : `${days} days ago`;
+    const st = isStale(task, q) ? ' stale' : '';
+    metaParts.push(`<span class="m-item m-carry${st}">· from ${label}</span>`);
+  }
+  if(task.tags && task.tags.length){
+    task.tags.forEach(tag => {
+      metaParts.push(`<span class="m-item m-tag" data-tag="${esc(tag)}">#${esc(tag)}</span>`);
+    });
+  }
+  const metaHtml = metaParts.length ? `<div class="tmeta">${metaParts.join('')}</div>` : '';
+
+  const isPinned = tasks.pinId === task.id;
+
+  div.innerHTML = `
+    <div class="ti-handles">
+      <button class="handle drag-handle" title="Drag to move" aria-label="Drag">⋮⋮</button>
+      <button class="handle" data-a="slash" title="Actions (/ when selected)" aria-label="Actions">+</button>
+    </div>
+    <div class="trow">
+      <span class="${arrowClass}" data-a="toggle" title="Expand notes" role="button" aria-label="Toggle notes">▶</span>
+      <button class="tcb ${task.completed ? 'ck' : ''}" data-a="ck" role="checkbox" aria-checked="${task.completed}" aria-label="Toggle complete"></button>
+      <div class="tinfo">
+        <div class="tname ${task.completed ? 'done' : ''}" data-edit="name" tabindex="0">${esc(task.name)}</div>
+        ${metaHtml}
+      </div>
+      <div class="tactions">
+        <button class="tact ${isPinned ? 'active' : ''}" data-a="pin" title="Pin (P)" aria-label="Pin">${isPinned ? '★' : '☆'}</button>
+        <button class="tact ${task.deliverable ? 'active' : ''}" data-a="deliv" title="Deliverable (M)" aria-label="Deliverable">▸</button>
+        <button class="tact" data-a="del" title="Delete (D)" aria-label="Delete">×</button>
+      </div>
+    </div>
+    <div class="tdet ${task.open ? 'open' : ''}">
+      <div class="tdet-in">
+        <textarea class="tnotes" placeholder="Notes…" data-f="notes" aria-label="Notes">${esc(task.notes || '')}</textarea>
+        <div class="tdet-foot">
+          ${task.createdAt ? `<span>created ${new Date(task.createdAt).toLocaleDateString()} ${fmtTime(task.createdAt)}</span>` : ''}
+          ${task.completedAt ? `<span>done ${new Date(task.completedAt).toLocaleDateString()} ${fmtTime(task.completedAt)}</span>` : ''}
+          ${task.carriedFrom ? `<span>from ${task.carriedFrom}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+
+  setupDrag(div, task, q);
+
+  // Toggle arrow
+  div.querySelector('[data-a="toggle"]').addEventListener('click', e => {
+    e.stopPropagation();
+    task.open = !task.open;
+    save();
+    div.querySelector('.tdet').classList.toggle('open', task.open);
+    div.querySelector('.tarrow').classList.toggle('open', task.open);
+    if(task.open){
+      focId = task.id; focPos = (task.notes || '').length;
+      const ta = div.querySelector('[data-f="notes"]');
+      requestAnimationFrame(()=>{
+        ta.focus();
+        ta.selectionStart = ta.selectionEnd = ta.value.length;
+        autoR(ta);
+      });
+    }
+  });
+
+  // Contenteditable name — Notion-style inline editing
+  const nameEl = div.querySelector('[data-edit="name"]');
+  let editingName = false;
+
+  function startEditName(){
+    if(editingName) return;
+    editingName = true;
+    nameEl.setAttribute('contenteditable','true');
+    nameEl.focus();
+    // Place cursor at end
+    const range = document.createRange();
+    range.selectNodeContents(nameEl);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  function commitName(){
+    if(!editingName) return;
+    editingName = false;
+    nameEl.removeAttribute('contenteditable');
+    const v = nameEl.textContent.trim();
+    if(!v){
+      // Revert
+      nameEl.textContent = task.name;
+      return;
+    }
+    if(v === task.name) return;
+    // Parse for inline flags
+    const p = parseInput(v);
+    task.name = p.name || v;
+    if(p.d) task.deliverable = true;
+    if(p.r) task.recurring = true;
+    if(p.tags.length) task.tags = [...new Set([...(task.tags||[]), ...p.tags])];
+    save();
+    renderQ(q); updatePin();
+  }
+
+  nameEl.addEventListener('click', e => {
+    e.stopPropagation();
+    if(!editingName) startEditName();
+  });
+  nameEl.addEventListener('blur', commitName);
+  nameEl.addEventListener('keydown', ev => {
+    ev.stopPropagation();
+    if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); commitName(); nameEl.blur(); }
+    if(ev.key === 'Escape'){ ev.preventDefault(); nameEl.textContent = task.name; editingName = false; nameEl.removeAttribute('contenteditable'); nameEl.blur(); }
+    if(ev.key === '/' && editingName){
+      // open slash menu at cursor position
+      requestAnimationFrame(()=> openSlashMenu(task, q, div, 'name'));
+    }
+  });
+  div._startEdit = startEditName;
+
+  // Checkbox
+  div.querySelector('[data-a="ck"]').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleComplete(task, q, div);
+  });
+
+  // Pin / deliv / slash / del
+  div.querySelector('[data-a="pin"]').addEventListener('click', e => {
+    e.stopPropagation(); togglePin(task, q);
+  });
+  div.querySelector('[data-a="deliv"]').addEventListener('click', e => {
+    e.stopPropagation();
+    task.deliverable = !task.deliverable;
+    save(); renderQ(q); updateSummary();
+  });
+  div.querySelector('[data-a="slash"]').addEventListener('click', e => {
+    e.stopPropagation();
+    openSlashMenu(task, q, div, 'handle');
+  });
+  div.querySelector('[data-a="del"]').addEventListener('click', e => {
+    e.stopPropagation(); deleteTask(task, q);
+  });
+
+  // Tags
+  div.querySelectorAll('.m-tag').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      filterByTag(b.dataset.tag);
+    });
+  });
+
+  // Notes textarea
+  const ta = div.querySelector('[data-f="notes"]');
+  ta.addEventListener('input', ()=>{
+    task.notes = ta.value; save(); autoR(ta);
+    // Update arrow color
+    const ar = div.querySelector('.tarrow');
+    if(ar){
+      if(task.notes.trim()){ ar.classList.remove('empty'); ar.classList.add('has-notes'); }
+      else{ ar.classList.remove('has-notes'); ar.classList.add('empty'); }
+    }
+  });
+  ta.addEventListener('focus', ()=>{ focId = task.id; });
+  ta.addEventListener('blur', ()=>{ if(focId === task.id){ focId = null; focPos = null; } });
+  ta.addEventListener('click', e => e.stopPropagation());
+  ta.addEventListener('keydown', ev => {
+    ev.stopPropagation();
+    if(ev.key === 'Escape'){
+      ev.preventDefault();
+      task.open = false; focId = null; save();
+      div.querySelector('.tdet').classList.remove('open');
+      div.querySelector('.tarrow').classList.remove('open');
+    }
+    if(ev.key === '/' && ta.value.slice(0, ta.selectionStart).endsWith('')){
+      // Trigger slash menu only at start of line
+      const before = ta.value.slice(0, ta.selectionStart);
+      if(/(^|\n)$/.test(before)){
+        ev.preventDefault();
+        openSlashMenu(task, q, div, 'notes');
+      }
+    }
+  });
+  if(task.open) requestAnimationFrame(()=> autoR(ta));
+  if(focId === task.id && task.open){
+    requestAnimationFrame(()=>{
+      ta.focus();
+      if(focPos != null){
+        const p = Math.min(focPos, ta.value.length);
+        ta.selectionStart = ta.selectionEnd = p;
+      }
+      autoR(ta);
+    });
+  }
+
+  // Clicking the row (but not on interactives) focuses name for quick editing
+  div.querySelector('.trow').addEventListener('click', e => {
+    if(e.target.closest('[data-a]') || e.target.closest('[data-edit]') || e.target.closest('.tactions')) return;
+    // Default click on row expands/collapses notes
+    task.open = !task.open;
+    save();
+    div.querySelector('.tdet').classList.toggle('open', task.open);
+    div.querySelector('.tarrow').classList.toggle('open', task.open);
+  });
+
+  return div;
+}
+
+// Action helpers
+function toggleComplete(task, q, div){
+  task.completed = !task.completed;
+  task.completedToday = task.completed;
+  if(task.completed){ task.completedAt = nowIso(); playSound(); }
+  else{ task.completedAt = null; }
+  save();
+  if(div){
+    div.querySelector('.tcb').classList.toggle('ck', task.completed);
+    div.querySelector('.tcb').setAttribute('aria-checked', task.completed);
+    div.querySelector('.tname').classList.toggle('done', task.completed);
+  }
+  updateCount(q); updateSummary(); updateTitle(); updatePin();
+  const list = document.getElementById('l-' + q);
+  const pos = new Map();
+  Array.from(list.children).forEach(el => {
+    if(el.dataset && el.dataset.id) pos.set(el.dataset.id, el.getBoundingClientRect().top);
+  });
+  renderQ(q);
+  Array.from(list.querySelectorAll('.ti')).forEach(el => {
+    const oldTop = pos.get(el.dataset.id);
+    if(oldTop === undefined) return;
+    const newTop = el.getBoundingClientRect().top;
+    const d = oldTop - newTop;
+    if(!d) return;
+    el.style.transform = `translateY(${d}px)`;
+    el.style.transition = 'none';
+    requestAnimationFrame(()=>{
+      el.style.transition = 'transform 260ms cubic-bezier(.4,0,.2,1)';
+      el.style.transform = '';
+      setTimeout(()=>{ el.style.transition=''; el.style.transform=''; }, 280);
+    });
+  });
+}
+
+function togglePin(task, q){
+  if(tasks.pinId === task.id){ tasks.pinId = null; tasks.pinQ = null; }
+  else { tasks.pinId = task.id; tasks.pinQ = q; }
+  save(); renderQ(q); updatePin();
+  toast(tasks.pinId ? 'Pinned' : 'Unpinned');
+}
+
+function deleteTask(task, q){
+  const idx = tasks[q].findIndex(t => t.id === task.id);
+  if(idx === -1) return;
+  const removed = JSON.parse(JSON.stringify(task));
+  tasks[q] = tasks[q].filter(t => t.id !== task.id);
+  const isSeeded = SEED_DATA[q] && SEED_DATA[q].some(st => st.id === task.id);
+  if(isSeeded){
+    if(!Array.isArray(tasks.seededDeleted)) tasks.seededDeleted = [];
+    if(!tasks.seededDeleted.includes(task.id)) tasks.seededDeleted.push(task.id);
+  }
+  if(tasks.pinId === task.id){ tasks.pinId = null; tasks.pinQ = null; }
+  save();
+  renderQ(q); updateSummary(); updateTitle(); updatePin();
+  pushUndo({
+    label: `"${task.name.slice(0,30)}${task.name.length>30?'…':''}" deleted`,
+    undo: ()=>{
+      const insertIdx = Math.min(idx, tasks[q].length);
+      tasks[q].splice(insertIdx, 0, removed);
+      if(Array.isArray(tasks.seededDeleted)){
+        tasks.seededDeleted = tasks.seededDeleted.filter(id => id !== removed.id);
+      }
+      save(); renderQ(q); updateSummary(); updateTitle();
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Slash menu
+// ═══════════════════════════════════════════════════════════════
+const slashMenu = document.getElementById('slashMenu');
+let slashCtx = null; // {task, q, div, origin}
+let slashFilter = '';
+let slashItems = [];
+let slashHlIdx = 0;
+
+function openSlashMenu(task, q, div, origin){
+  slashCtx = { task, q, div, origin };
+  slashFilter = '';
+  slashHlIdx = 0;
+  buildSlashItems();
+  renderSlash();
+  // Position near the task
+  const ref = origin === 'handle' ? div.querySelector('.ti-handles') :
+              origin === 'notes' ? div.querySelector('.tnotes') :
+              div.querySelector('.tname');
+  const r = ref.getBoundingClientRect();
+  slashMenu.style.top = (r.bottom + window.scrollY + 4) + 'px';
+  slashMenu.style.left = (r.left + window.scrollX) + 'px';
+  slashMenu.classList.add('show');
+}
+function closeSlashMenu(){
+  slashMenu.classList.remove('show');
+  slashCtx = null; slashFilter = '';
+}
+
+function buildSlashItems(){
+  if(!slashCtx) return;
+  const t = slashCtx.task, q = slashCtx.q;
+  const items = [
+    { label: t.deliverable ? 'Unmark deliverable' : 'Mark as deliverable', icon:'▸', do: ()=>{
+      t.deliverable = !t.deliverable; save(); renderQ(q); updateSummary();
+    }},
+    { label: t.recurring ? 'Stop daily recurring' : 'Make daily recurring', icon:'↻', do: ()=>{
+      t.recurring = !t.recurring; save(); renderQ(q);
+    }},
+    { label: tasks.pinId === t.id ? 'Unpin' : 'Pin as focus', icon:'★', do: ()=>{
+      togglePin(t, q);
+    }},
+    { label: 'Move to Do first', icon:'1', hint:IS_MAC?'⌘1':'Ctrl+1', do: ()=> moveToQuadrant(q, t.id, 'q1'), disabled: q === 'q1' },
+    { label: 'Move to Schedule', icon:'2', hint:IS_MAC?'⌘2':'Ctrl+2', do: ()=> moveToQuadrant(q, t.id, 'q2'), disabled: q === 'q2' },
+    { label: 'Move to Delegate', icon:'3', hint:IS_MAC?'⌘3':'Ctrl+3', do: ()=> moveToQuadrant(q, t.id, 'q3'), disabled: q === 'q3' },
+    { label: 'Add tag…', icon:'#', do: ()=>{
+      closeSlashMenu();
+      const tag = prompt('Tag name (no # needed):', '');
+      if(tag && tag.trim()){
+        const clean = tag.trim().replace(/^#/,'').replace(/[^a-zA-Z0-9_-]/g,'').toLowerCase();
+        if(clean){
+          t.tags = [...new Set([...(t.tags || []), clean])];
+          save(); renderQ(q);
+        }
+      }
+    }},
+    { label: 'Expand notes', icon:'≡', do: ()=>{
+      t.open = true; save(); renderQ(q);
+      setTimeout(()=>{
+        const ta = document.querySelector(`.ti[data-id="${t.id}"] .tnotes`);
+        if(ta) ta.focus();
+      }, 50);
+    }, disabled: t.open },
+    { label: 'Delete task', icon:'×', hint:'D', do: ()=> deleteTask(t, q) }
+  ].filter(x => !x.disabled);
+  slashItems = slashFilter ? items.filter(i => i.label.toLowerCase().includes(slashFilter.toLowerCase())) : items;
+  if(slashHlIdx >= slashItems.length) slashHlIdx = Math.max(0, slashItems.length - 1);
+}
+function renderSlash(){
+  if(!slashCtx) return;
+  let html = '<div class="slash-section">Actions</div>';
+  if(slashItems.length === 0){
+    html += '<div class="slash-item" style="color:var(--text-4)">No matches</div>';
+  }else{
+    slashItems.forEach((it, i) => {
+      html += `<div class="slash-item${i === slashHlIdx ? ' hl' : ''}" data-idx="${i}">
+        <span class="slash-icon">${it.icon}</span>
+        <span class="slash-label">${esc(it.label)}</span>
+        ${it.hint ? `<span class="slash-hint">${it.hint}</span>` : ''}
+      </div>`;
+    });
+  }
+  slashMenu.innerHTML = html;
+  slashMenu.querySelectorAll('.slash-item[data-idx]').forEach(el => {
+    el.addEventListener('mouseenter', ()=>{
+      slashHlIdx = parseInt(el.dataset.idx);
+      slashMenu.querySelectorAll('.slash-item').forEach((e, i) => e.classList.toggle('hl', i === slashHlIdx));
+    });
+    el.addEventListener('click', ()=>{
+      const item = slashItems[parseInt(el.dataset.idx)];
+      if(item){ closeSlashMenu(); item.do(); }
+    });
+  });
+}
+
+// Keyboard for slash menu
+document.addEventListener('keydown', e => {
+  if(!slashCtx || !slashMenu.classList.contains('show')) return;
+  if(e.key === 'Escape'){ e.preventDefault(); closeSlashMenu(); return; }
+  if(e.key === 'ArrowDown'){ e.preventDefault(); slashHlIdx = Math.min(slashItems.length - 1, slashHlIdx + 1); renderSlash(); return; }
+  if(e.key === 'ArrowUp'){ e.preventDefault(); slashHlIdx = Math.max(0, slashHlIdx - 1); renderSlash(); return; }
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const item = slashItems[slashHlIdx];
+    if(item){ closeSlashMenu(); item.do(); }
+    return;
+  }
+  // Filter with typing
+  if(e.key.length === 1){
+    slashFilter += e.key;
+    slashHlIdx = 0;
+    buildSlashItems(); renderSlash();
+  }else if(e.key === 'Backspace' && slashFilter){
+    slashFilter = slashFilter.slice(0, -1);
+    buildSlashItems(); renderSlash();
+  }
+}, true);
+
+// Click-outside closes
+document.addEventListener('click', e => {
+  if(slashMenu.classList.contains('show') && !slashMenu.contains(e.target)) closeSlashMenu();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  Counts + summary line
+// ═══════════════════════════════════════════════════════════════
+function updateCount(q){
+  const total = tasks[q].length;
+  const comp = tasks[q].filter(t => t.completed).length;
+  const active = total - comp;
+  const countEl = document.getElementById('c-' + q);
+  countEl.textContent = total === 0 ? '' : active === total ? `${total}` : `${active} of ${total}`;
+  countEl.classList.toggle('warn', q === 'q1' && active > Q1_OVERLOAD);
+}
+
+function updateSummary(){
+  let a=0, d=0, c=0, dn=0, stale=0;
+  Q.forEach(q => tasks[q].forEach(t => {
+    if(!t.completed){
+      a++;
+      if(t.deliverable) d++;
+      if(t.carried) c++;
+      if(isStale(t, q)) stale++;
+    }
+    if(t.completedToday) dn++;
+  }));
+  const bar = document.getElementById('summary');
+  const parts = [];
+  parts.push(`<button class="summary-item${activeFilter===null&&!activeFilter?'':''}" data-f="clear">${a} active</button>`);
+  if(d > 0) parts.push(`<button class="summary-item${activeFilter && activeFilter.type==='deliv' ? ' active' : ''}" data-f="deliv">${d} deliverable${d>1?'s':''}</button>`);
+  if(c > 0) parts.push(`<button class="summary-item${activeFilter && activeFilter.type==='carried' ? ' active' : ''}${stale>0?' warn':''}" data-f="carried">${c} carried${stale>0?` (${stale} stale)`:''}</button>`);
+  if(dn > 0) parts.push(`<button class="summary-item${activeFilter && activeFilter.type==='done' ? ' active' : ''}" data-f="done">${dn} done today</button>`);
+  const q1Active = tasks.q1.filter(t => !t.completed).length;
+  if(q1Active > Q1_OVERLOAD) parts.push(`<span class="summary-item warn" style="cursor:default">Q1 overloaded</span>`);
+  if(parts.length === 1 && a === 0){
+    bar.innerHTML = `<span style="color:var(--text-4);font-style:italic">All clear. Nothing active.</span>`;
+    return;
+  }
+  bar.innerHTML = parts.join('<span class="summary-sep">·</span>');
+  bar.querySelectorAll('[data-f]').forEach(b => {
+    b.addEventListener('click', ()=>{
+      const f = b.dataset.f;
+      if(f === 'clear') setActiveFilter(null);
+      else if(f === 'deliv') setActiveFilter('deliv', null, 'Deliverables');
+      else if(f === 'carried') setActiveFilter('carried', null, 'Carried over');
+      else if(f === 'done') setActiveFilter('done', null, 'Done today');
+    });
+  });
+}
+
+function updateTitle(){
+  const a = Q.reduce((s, q) => s + tasks[q].filter(t => !t.completed).length, 0);
+  const pinned = tasks.pinId && tasks.pinQ ? tasks[tasks.pinQ]?.find(t=>t.id===tasks.pinId) : null;
+  if(pinned && !pinned.completed){
+    document.title = `${pinned.name.slice(0,30)}${pinned.name.length>30?'…':''}`;
+  }else{
+    document.title = a > 0 ? `Tasks (${a})` : 'Tasks';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderQ(q){
+  if(focId){
+    const ae = document.activeElement;
+    if(ae && ae.tagName === 'TEXTAREA') focPos = ae.selectionStart;
+  }
+  const sx = window.scrollX, sy = window.scrollY;
+  const list = document.getElementById('l-' + q);
+  list.innerHTML = '';
+  const s = sorted(q);
+
+  if(s.active.length === 0 && s.done.length === 0){
+    const msg = q === 'q1' ? 'Nothing urgent. Savor it.'
+              : q === 'q2' ? 'Empty. <b>Q2 is where real progress lives</b> — plan ahead here.'
+              : 'Nothing delegated. <b>All yours?</b>';
+    list.innerHTML = `<div class="empty">${msg}</div>`;
+  }else{
+    s.active.forEach(t => list.appendChild(mkTask(t, q)));
+    if(s.done.length > 0){
+      const sep = document.createElement('div');
+      sep.className = 'tlist-sep' + (prefs.hideCompleted ? ' collapsed' : '');
+      sep.innerHTML = `<span class="sep-arrow">▾</span> <span>${s.done.length} done</span>`;
+      sep.addEventListener('click', ()=>{
+        prefs.hideCompleted = !prefs.hideCompleted;
+        savePrefs();
+        Q.forEach(renderQ);
+      });
+      list.appendChild(sep);
+      if(!prefs.hideCompleted){
+        s.done.forEach(t => list.appendChild(mkTask(t, q)));
+      }
+    }
+  }
+  updateCount(q);
+  applySearch();
+  applyActiveFilter();
+  window.scrollTo(sx, sy);
+}
+
+function renderAll(){ Q.forEach(renderQ); updateSummary(); updateTitle(); updatePin(); updateBriefing(); }
+
+// ═══════════════════════════════════════════════════════════════
+//  Add task (shared by ghost + modal)
+// ═══════════════════════════════════════════════════════════════
+function addTask(q, raw, notes, deliv, recur, tags, rapid, openAfter){
+  if(!raw || !raw.trim()) return null;
+  const p = parseInput(raw);
+  const name = p.name;
+  if(!name) return null;
+  const finalDeliv = !!(deliv || p.d);
+  const finalRecur = !!(recur || p.r);
+  const finalTags = [...new Set([...(tags || []), ...p.tags])];
+  const id = genId();
+  const shouldOpen = !!openAfter;
+  const task = {
+    id, name,
+    completed: false, completedToday: false, open: shouldOpen,
+    notes: notes || '', createdAt: nowIso(),
+    deliverable: finalDeliv, recurring: finalRecur,
+    carried: false, carriedFrom: null, completedAt: null,
+    dueDate: null, estimate: null, tags: finalTags
+  };
+  tasks[q].unshift(task);
+  if(shouldOpen){ focId = id; focPos = 0; }
+  prefs.lastQ = q; savePrefs();
+  save(); renderQ(q); updateSummary(); updateTitle();
+  return task;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INLINE GHOST ADD — the big UX change
+// ═══════════════════════════════════════════════════════════════
+//  - Click or keyboard-focus "+ New task" line
+//  - Becomes editable in place, text input
+//  - Enter → commit + spawn new ghost (focus stays)
+//  - Empty Enter → exit add mode
+//  - Escape → exit add mode
+//  - ⌘Enter → commit + exit
+//  - Tab → commit + open details of the just-created task (notes)
+// ═══════════════════════════════════════════════════════════════
+document.querySelectorAll('.add-ghost').forEach(el => {
+  el.addEventListener('click', ()=> activateGhost(el));
+  el.addEventListener('focus', ()=>{}); // focusable but doesn't auto-activate
+  el.addEventListener('keydown', e => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      activateGhost(el);
+    }
+  });
+});
+
+function activateGhost(ghostEl){
+  if(ghostEl.classList.contains('active')) return;
+  const q = ghostEl.dataset.q;
+  ghostEl.classList.add('active');
+  ghostEl.innerHTML = `
+    <span class="g-plus">+</span>
+    <input class="add-ghost-input" placeholder="Type a task… (try !d or #tag)" aria-label="New task"/>
+  `;
+  const input = ghostEl.querySelector('.add-ghost-input');
+  input.focus();
+
+  function exit(){
+    ghostEl.classList.remove('active');
+    ghostEl.innerHTML = `<span class="g-plus">+</span><span>New task</span>`;
+    // Re-bind since we replaced innerHTML
+    // (the original click/keydown listeners were on ghostEl itself, not children, so they still work)
+  }
+
+  function commit(rapid){
+    const v = input.value.trim();
+    if(!v){ exit(); return; }
+    addTask(q, v, '', false, false, [], rapid);
+    if(rapid){
+      // Keep ghost active, clear input, re-focus. Don't destroy the input.
+      input.value = '';
+      // renderQ just ran; the ghost element itself was not touched (it's a sibling of .tlist),
+      // but in case any outer re-render happened, re-query and re-focus:
+      requestAnimationFrame(()=>{
+        const liveInput = ghostEl.querySelector('.add-ghost-input');
+        if(liveInput) liveInput.focus();
+        else {
+          // Edge case: something did replace the ghost. Re-activate fresh.
+          const fresh = document.querySelector(`.add-ghost[data-q="${q}"]`);
+          if(fresh){
+            fresh.classList.remove('active');
+            activateGhost(fresh);
+          }
+        }
+      });
+    }else{
+      exit();
+    }
+  }
+
+  input.addEventListener('blur', ()=>{
+    // Blur delay so clicks on slash menu or other UI don't kill the input
+    setTimeout(()=>{
+      if(document.activeElement === input) return;
+      const v = input.value.trim();
+      if(v){ addTask(q, v, '', false, false, [], false); }
+      // Need to re-query ghost since render may have happened
+      const current = document.querySelector(`.add-ghost[data-q="${q}"]`);
+      if(current && current.classList.contains('active')){
+        current.classList.remove('active');
+        current.innerHTML = `<span class="g-plus">+</span><span>New task</span>`;
+      }
+    }, 100);
+  });
+
+  input.addEventListener('keydown', e => {
+    e.stopPropagation(); // prevent global J/K/etc from hijacking typing
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      if(e.metaKey || e.ctrlKey){
+        commit(false); // commit + exit
+      }else{
+        commit(true);  // commit + spawn next
+      }
+    }
+    if(e.key === 'Escape'){
+      e.preventDefault();
+      input.value = '';
+      exit();
+    }
+    if(e.key === 'Tab' && !e.shiftKey){
+      // Commit and expand notes of just-added task
+      const v = input.value.trim();
+      if(v){
+        e.preventDefault();
+        const t = addTask(q, v, '', false, false, [], false, true);
+        exit();
+        setTimeout(()=>{
+          const newEl = document.querySelector(`.ti[data-id="${t.id}"]`);
+          if(newEl){
+            const ta = newEl.querySelector('.tnotes');
+            if(ta){ ta.focus(); autoR(ta); }
+          }
+        }, 60);
+      }
+    }
+    // Slash menu trigger inside ghost — for full slash menu, we'll suggest opening the Quick Add modal instead
+    // (slash inside ghost is complex; keeping slash only for existing tasks for now)
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Search
+// ═══════════════════════════════════════════════════════════════
+const searchBar = document.getElementById('searchBar');
+const searchIn = document.getElementById('searchInput');
+let activeFilter = null;
+
+function toggleSearch(){
+  searchBar.classList.toggle('show');
+  if(searchBar.classList.contains('show')){
+    setTimeout(()=> searchIn.focus(), 50);
+  }else{
+    searchIn.value = ''; applySearch();
+  }
+}
+
+function applySearch(){
+  const q = searchIn.value.trim().toLowerCase();
+  document.querySelectorAll('.ti').forEach(el => {
+    if(!q){ el.classList.remove('search-hidden'); return; }
+    const t = tasks[el.dataset.q] && tasks[el.dataset.q].find(x => x.id === el.dataset.id);
+    if(!t) return;
+    const haystack = (t.name + ' ' + (t.notes || '') + ' ' + (t.tags || []).join(' ')).toLowerCase();
+    el.classList.toggle('search-hidden', !haystack.includes(q));
+  });
+}
+
+function applyActiveFilter(){
+  if(!activeFilter){
+    document.querySelectorAll('.ti').forEach(el => el.classList.remove('filter-hidden'));
+    return;
+  }
+  document.querySelectorAll('.ti').forEach(el => {
+    const t = tasks[el.dataset.q] && tasks[el.dataset.q].find(x => x.id === el.dataset.id);
+    let show = false;
+    if(!t){ el.classList.add('filter-hidden'); return; }
+    if(activeFilter.type === 'deliv') show = t.deliverable && !t.completed;
+    else if(activeFilter.type === 'carried') show = t.carried && !t.completed;
+    else if(activeFilter.type === 'done') show = t.completedToday;
+    else if(activeFilter.type === 'tag') show = (t.tags || []).includes(activeFilter.value);
+    else if(activeFilter.type === 'stale') show = isStale(t, el.dataset.q);
+    el.classList.toggle('filter-hidden', !show);
+  });
+}
+
+function setActiveFilter(type, value, label){
+  activeFilter = type ? { type, value } : null;
+  const chip = document.getElementById('filterChip');
+  const chipLabel = document.getElementById('filterChipLabel');
+  if(activeFilter){
+    chipLabel.textContent = label;
+    chip.classList.add('show');
+  }else{
+    chip.classList.remove('show');
+  }
+  updateSummary();
+  applyActiveFilter();
+}
+
+function filterByTag(tag){
+  setActiveFilter('tag', tag, `#${tag}`);
+}
+
+document.getElementById('searchBtn').addEventListener('click', toggleSearch);
+searchIn.addEventListener('input', applySearch);
+document.getElementById('searchClear').addEventListener('click', ()=>{
+  searchIn.value = ''; applySearch(); searchIn.focus();
+});
+searchIn.addEventListener('keydown', e => { if(e.key === 'Escape') toggleSearch(); });
+document.getElementById('filterChipClose').addEventListener('click', ()=>{
+  setActiveFilter(null);
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  Quick Add Modal (⌘K + Mac-wide shortcut)
+// ═══════════════════════════════════════════════════════════════
+let moQ = prefs.lastQ || 'q1', moD = false, moR = false;
+const moBg = document.getElementById('moBg');
+const moIn = document.getElementById('moIn');
+const moNotes = document.getElementById('moNotes');
+
+function openMo(prefill, preNotes, preQ, preD, preR, silent){
+  moBg.classList.add('show');
+  moIn.value = prefill || '';
+  moNotes.value = preNotes || '';
+  moD = !!preD; moR = !!preR;
+  document.getElementById('moDeliv').classList.toggle('active', moD);
+  document.getElementById('moRecur').classList.toggle('active', moR);
+  setMoQ(preQ && Q.includes(preQ) ? preQ : (prefs.lastQ || 'q1'));
+  setTimeout(()=>{
+    if(prefill){
+      moIn.focus(); moIn.setSelectionRange(moIn.value.length, moIn.value.length);
+    }else{
+      moIn.focus(); moIn.select();
+    }
+    if(preNotes) autoR(moNotes);
+  }, 50);
+  if(silent && prefill && prefill.trim()){
+    setTimeout(submitMo, 100);
+  }
+}
+function closeMo(){ moBg.classList.remove('show'); }
+function setMoQ(q){
+  moQ = q;
+  document.querySelectorAll('.mqb').forEach(b => b.classList.toggle('a', b.dataset.mq === q));
+}
+function submitMo(){
+  const raw = moIn.value.trim();
+  if(!raw) return;
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if(lines.length > 1){
+    const notes = moNotes.value.trim();
+    lines.forEach((l, i) => {
+      addTask(moQ, l, i === 0 ? notes : '', moD, moR, [], false);
+    });
+    toast(`${lines.length} tasks added to ${Q_NAMES[moQ]}`);
+  }else{
+    addTask(moQ, raw, moNotes.value.trim(), moD, moR, [], false);
+  }
+  closeMo();
+}
+
+document.querySelectorAll('.mqb').forEach(b => b.addEventListener('click', ()=> setMoQ(b.dataset.mq)));
+document.getElementById('moDeliv').addEventListener('click', ()=>{
+  moD = !moD; document.getElementById('moDeliv').classList.toggle('active', moD);
+});
+document.getElementById('moRecur').addEventListener('click', ()=>{
+  moR = !moR; document.getElementById('moRecur').classList.toggle('active', moR);
+});
+document.getElementById('moSubmit').addEventListener('click', submitMo);
+document.getElementById('qaBtn').addEventListener('click', ()=> openMo());
+
+document.getElementById('pasteBtn').addEventListener('click', async ()=>{
+  try{
+    const t = await navigator.clipboard.readText();
+    if(t){
+      const lines = t.trim().split(/\r?\n/);
+      moIn.value = lines[0].slice(0, 500);
+      if(lines.length > 1){ moNotes.value = lines.slice(1).join('\n').trim(); autoR(moNotes); }
+      moIn.focus();
+    }
+  }catch{ toast('Clipboard access denied'); }
+});
+
+moIn.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); submitMo(); }
+  if(e.key === 'Escape') closeMo();
+  if(e.key === 'Tab' && !e.shiftKey){ e.preventDefault(); moNotes.focus(); }
+  if((e.metaKey || e.ctrlKey) && ['1','2','3'].includes(e.key)){
+    e.preventDefault(); setMoQ('q' + e.key);
+  }
+});
+moNotes.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)){ e.preventDefault(); submitMo(); }
+  if(e.key === 'Escape') closeMo();
+  autoR(moNotes);
+});
+moNotes.addEventListener('input', ()=> autoR(moNotes));
+moBg.addEventListener('click', e => { if(e.target === moBg) closeMo(); });
+
+// ═══════════════════════════════════════════════════════════════
+//  Setup Modal
+// ═══════════════════════════════════════════════════════════════
+const setupBg = document.getElementById('setupBg');
+function buildSetupUrls(){
+  const base = location.href.split('?')[0].split('#')[0];
+  document.getElementById('setupUrlPlain').textContent = base;
+  document.getElementById('setupUrlQA').textContent = base + '?quickadd=1&text={Query}&q=q1';
+  document.getElementById('setupUrlShortcut').textContent = base + '?quickadd=1&text=PROVIDED_INPUT';
+  document.getElementById('setupUrlService').textContent = base + '?quickadd=1&text=ENCODED_INPUT&silent=1';
+  document.getElementById('setupUrlExample').textContent = base + '?quickadd=1&text=Buy+milk&q=q1&d=1&silent=1';
+  document.getElementById('setupUrlFocusQ1').textContent = base + '?focus=q1';
+  document.getElementById('setupUrlFocusQ2').textContent = base + '?focus=q2';
+  document.getElementById('setupUrlFocusQ3').textContent = base + '?focus=q3';
+}
+document.getElementById('setupBtn').addEventListener('click', ()=>{
+  buildSetupUrls();
+  setupBg.classList.add('show');
+});
+document.getElementById('setupClose').addEventListener('click', ()=> setupBg.classList.remove('show'));
+setupBg.addEventListener('click', e => { if(e.target === setupBg) setupBg.classList.remove('show'); });
+
+document.querySelectorAll('.setup-tab').forEach(t => {
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.setup-tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.setup-pane').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelector(`.setup-pane[data-pane="${t.dataset.tab}"]`).classList.add('active');
+  });
+});
+
+document.querySelectorAll('.setup-url').forEach(box => {
+  box.setAttribute('data-hint', 'copy');
+  box.addEventListener('click', async ()=>{
+    try{
+      await navigator.clipboard.writeText(box.textContent);
+      box.classList.add('copied');
+      box.setAttribute('data-hint', 'copied');
+      setTimeout(()=>{
+        box.classList.remove('copied');
+        box.setAttribute('data-hint', 'copy');
+      }, 2000);
+    }catch{ toast('Copy failed'); }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  Help + Theme
+// ═══════════════════════════════════════════════════════════════
+const helpBg = document.getElementById('helpBg');
+function toggleHelp(){ helpBg.classList.toggle('show'); }
+document.getElementById('helpBtn').addEventListener('click', toggleHelp);
+document.getElementById('helpClose').addEventListener('click', ()=> helpBg.classList.remove('show'));
+helpBg.addEventListener('click', e => { if(e.target === helpBg) helpBg.classList.remove('show'); });
+
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  const order = ['light','auto','dark'];
+  const idx = order.indexOf(prefs.theme);
+  prefs.theme = order[(idx + 1) % order.length];
+  savePrefs();
+  applyTheme();
+  toast(`Theme: ${prefs.theme}`);
+});
+
+// Focus mode
+function toggleFocus(fq){
+  if(document.body.classList.contains('focus-mode')){
+    document.body.classList.remove('focus-mode');
+    document.querySelectorAll('.quadrant').forEach(q => q.classList.remove('focused'));
+    prefs.focusMode = false;
+  }else{
+    const q = fq || (tasks.pinQ) || prefs.focusedQ || 'q1';
+    document.body.classList.add('focus-mode');
+    document.querySelectorAll('.quadrant').forEach(qe => qe.classList.toggle('focused', qe.dataset.q === q));
+    prefs.focusMode = true;
+    prefs.focusedQ = q;
+  }
+  savePrefs();
+}
+document.getElementById('focusBtn').addEventListener('click', ()=> toggleFocus());
+
+// Copy deliverables
+document.getElementById('copyBtn').addEventListener('click', async ()=>{
+  const dl = [];
+  Q.forEach(q => tasks[q].forEach(t => {
+    if(t.deliverable && !t.completed){
+      const notePart = t.notes ? ' — ' + t.notes.split('\n')[0].slice(0, 60) : '';
+      dl.push(`• ${t.name}${notePart}`);
+    }
+  }));
+  if(!dl.length){ toast('No active deliverables'); return; }
+  const text = `Deliverables for ${fmtDate()}:\n${dl.join('\n')}`;
+  try{
+    await navigator.clipboard.writeText(text);
+    toast(`Copied ${dl.length} deliverable${dl.length>1?'s':''}`);
+  }catch{
+    toast('Copy denied — see console');
+    console.log(text);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  Briefing
+// ═══════════════════════════════════════════════════════════════
+function updateBriefing(){
+  const today = todayStr();
+  if(prefs.briefingDismissedDate === today){
+    document.getElementById('briefing').classList.remove('show');
+    return;
+  }
+  let carried = 0, staleCount = 0, delivCarried = 0;
+  Q.forEach(q => tasks[q].forEach(t => {
+    if(!t.completed && t.carried){
+      carried++;
+      if(t.deliverable) delivCarried++;
+      if(isStale(t, q)) staleCount++;
+    }
+  }));
+  const q1Active = tasks.q1.filter(t => !t.completed).length;
+  const parts = [];
+  if(q1Active > Q1_OVERLOAD) parts.push(`<b>Q1 is overloaded</b> (${q1Active} urgent tasks). Nothing's urgent if everything is.`);
+  if(delivCarried > 0) parts.push(`<b>${delivCarried} deliverable${delivCarried>1?'s':''}</b> carried over — still matter?`);
+  if(staleCount > 0) parts.push(`<b>${staleCount} stale task${staleCount>1?'s':''}</b> (>5 days). Reschedule, downgrade, or kill.`);
+  if(carried > 0 && parts.length === 0) parts.push(`${carried} task${carried>1?'s':''} carried from earlier.`);
+  if(parts.length === 0){
+    document.getElementById('briefing').classList.remove('show');
+    return;
+  }
+  document.getElementById('briefingText').innerHTML = parts.join(' ');
+  document.getElementById('briefing').classList.add('show');
+}
+document.getElementById('briefingClose').addEventListener('click', ()=>{
+  prefs.briefingDismissedDate = todayStr();
+  savePrefs();
+  document.getElementById('briefing').classList.remove('show');
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  Data Modal (export/import/bankruptcy)
+// ═══════════════════════════════════════════════════════════════
+const dataBg = document.getElementById('dataBg');
+document.getElementById('dataBtn').addEventListener('click', ()=>{
+  const total = Q.reduce((s, q) => s + tasks[q].length, 0);
+  const withNotes = Q.reduce((s, q) => s + tasks[q].filter(t => t.notes && t.notes.trim()).length, 0);
+  document.getElementById('dataCopyCount').textContent =
+    `${total} tasks (${withNotes} with notes) across ${Q.length} quadrants`;
+  document.getElementById('dataImportArea').value = '';
+  const status = document.getElementById('autoBackupStatus');
+  if(tasks.lastBackup){
+    const diff = daysAgo(tasks.lastBackup.split('T')[0]);
+    status.textContent = `Last backup: ${diff === 0 ? 'today' : diff === 1 ? 'yesterday' : diff + ' days ago'}`;
+  }else{
+    status.textContent = 'Never backed up.';
+  }
+  dataBg.classList.add('show');
+});
+document.getElementById('dataClose').addEventListener('click', ()=> dataBg.classList.remove('show'));
+dataBg.addEventListener('click', e => { if(e.target === dataBg) dataBg.classList.remove('show'); });
+
+document.getElementById('dataCopyBtn').addEventListener('click', async ()=>{
+  const data = JSON.stringify(tasks, null, 2);
+  const btn = document.getElementById('dataCopyBtn');
+  try{
+    await navigator.clipboard.writeText(data);
+    btn.textContent = 'Copied!';
+    tasks.lastBackup = nowIso(); saveNow();
+    setTimeout(()=>{ btn.textContent = 'Copy JSON'; }, 2000);
+  }catch{ btn.textContent = 'Copy failed'; setTimeout(()=>{ btn.textContent = 'Copy JSON'; }, 2000); }
+});
+
+document.getElementById('dataDownloadBtn').addEventListener('click', ()=>{
+  const data = JSON.stringify(tasks, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `tasks-backup-${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  const btn = document.getElementById('dataDownloadBtn');
+  btn.textContent = 'Downloaded!';
+  tasks.lastBackup = nowIso(); saveNow();
+  setTimeout(()=>{ btn.textContent = 'Download'; }, 2000);
+});
+
+document.getElementById('dataMdBtn').addEventListener('click', async ()=>{
+  const lines = [`# Tasks — ${fmtDate()}`, ''];
+  for(const q of Q){
+    const icon = q === 'q1' ? '🔥' : q === 'q2' ? '📅' : '🤝';
+    const active = tasks[q].filter(t => !t.completed);
+    const done = tasks[q].filter(t => t.completed);
+    lines.push(`## ${Q_NAMES[q]} (${active.length} active, ${done.length} done)`);
+    lines.push('');
+    for(const t of active){
+      const badges = [];
+      if(t.deliverable) badges.push('deliverable');
+      if(t.recurring) badges.push('daily');
+      if(t.carried) badges.push(`carried ${daysAgo(t.carriedFrom)}d`);
+      if(t.tags && t.tags.length) badges.push(...t.tags.map(x => '#'+x));
+      lines.push(`- [ ] ${t.name}${badges.length ? ' `' + badges.join(' · ') + '`' : ''}`);
+      if(t.notes && t.notes.trim()){
+        t.notes.split('\n').forEach(ln => lines.push(`  ${ln}`));
+      }
+    }
+    for(const t of done){ lines.push(`- [x] ~~${t.name}~~`); }
+    lines.push('');
+  }
+  const md = lines.join('\n');
+  try{
+    await navigator.clipboard.writeText(md);
+    toast('Markdown copied');
+  }catch{
+    const blob = new Blob([md], {type: 'text/markdown'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tasks-${todayStr()}.md`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Markdown downloaded');
+  }
+});
+
+const dropArea = document.getElementById('dataImportArea');
+dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.style.borderColor = 'var(--text)'; });
+dropArea.addEventListener('dragleave', ()=>{ dropArea.style.borderColor = ''; });
+dropArea.addEventListener('drop', async e => {
+  e.preventDefault();
+  dropArea.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if(!file) return;
+  if(file.size > 10 * 1024 * 1024){ toast('File too large'); return; }
+  try{
+    const text = await file.text();
+    dropArea.value = text;
+    toast(`Loaded ${file.name}`);
+  }catch{ toast('Could not read file'); }
+});
+
+document.getElementById('dataImportBtn').addEventListener('click', ()=> doImport(false));
+document.getElementById('dataReplaceBtn').addEventListener('click', ()=>{
+  if(!confirm('Replace ALL current tasks with the pasted data?')) return;
+  doImport(true);
+});
+
+function doImport(replace){
+  const raw = document.getElementById('dataImportArea').value.trim();
+  if(!raw){ toast('Paste your data first'); return; }
+  let parsed;
+  try{ parsed = JSON.parse(raw); }catch{ toast('Invalid JSON'); return; }
+  if(!parsed || typeof parsed !== 'object'){ toast('Invalid data'); return; }
+  const snapshot = JSON.parse(JSON.stringify(tasks));
+
+  if(replace){
+    const fresh = emptyState();
+    for(const k of Q){ if(Array.isArray(parsed[k])) fresh[k] = parsed[k].map(normalizeTask).filter(Boolean); }
+    fresh.lastDate = parsed.lastDate || todayStr();
+    fresh.pinId = parsed.pinId || null;
+    fresh.pinQ = parsed.pinQ || null;
+    fresh.seededDeleted = Array.isArray(parsed.seededDeleted) ? parsed.seededDeleted : [];
+    Object.keys(fresh).forEach(k => { tasks[k] = fresh[k]; });
+    toast('All tasks replaced');
+  }else{
+    const existingIds = new Set();
+    Q.forEach(q => tasks[q].forEach(t => existingIds.add(t.id)));
+    let added = 0, updated = 0;
+    for(const q of Q){
+      if(!Array.isArray(parsed[q])) continue;
+      for(const raw of parsed[q]){
+        const t = normalizeTask(raw);
+        if(!t) continue;
+        if(!existingIds.has(t.id)){ tasks[q].unshift(t); added++; }
+        else{
+          const existing = tasks[q].find(x => x.id === t.id);
+          if(existing){
+            if(t.notes && !existing.notes){ existing.notes = t.notes; updated++; }
+            if(Array.isArray(t.tags) && t.tags.length){
+              existing.tags = [...new Set([...(existing.tags||[]), ...t.tags])];
+            }
+          }
+        }
+      }
+    }
+    if(added === 0 && updated === 0){ toast('No new tasks found'); return; }
+    const parts = [];
+    if(added) parts.push(`${added} added`);
+    if(updated) parts.push(`${updated} notes filled`);
+    toast(parts.join(', '));
+  }
+  save();
+  renderAll();
+  document.getElementById('dataImportArea').value = '';
+  dataBg.classList.remove('show');
+  pushUndo({
+    label: replace ? 'Import-replace' : 'Import-merge',
+    undo: ()=>{ Object.keys(snapshot).forEach(k => { tasks[k] = snapshot[k]; }); save(); renderAll(); }
+  });
+}
+
+document.getElementById('dataBankruptcyBtn').addEventListener('click', ()=>{
+  if(!confirm('Wipe ALL tasks and restore only the seed?')) return;
+  if(!confirm('Really? Last chance.')) return;
+  const snapshot = JSON.parse(JSON.stringify(tasks));
+  try{ localStorage.removeItem(SK); }catch{}
+  const fresh = emptyState();
+  for(const q of Q){ if(SEED_DATA[q]) fresh[q] = SEED_DATA[q].map(normalizeTask).filter(Boolean); }
+  Object.keys(fresh).forEach(k => { tasks[k] = fresh[k]; });
+  save();
+  renderAll();
+  dataBg.classList.remove('show');
+  pushUndo({
+    label: 'Bankruptcy',
+    undo: ()=>{ Object.keys(snapshot).forEach(k => { tasks[k] = snapshot[k]; }); save(); renderAll(); }
+  });
+  toast('Bankruptcy declared');
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  Keyboard navigation (j/k/l/h/x/e/o/d/p/m + global)
+// ═══════════════════════════════════════════════════════════════
+let hoveredTI = null;
+document.addEventListener('mouseover', e => { hoveredTI = e.target.closest('.ti'); });
+
+function highlightKbdFocused(){
+  document.querySelectorAll('.ti.kbd-focused').forEach(el => el.classList.remove('kbd-focused'));
+  if(!kbdFocusedId) return;
+  const el = document.querySelector(`.ti[data-id="${kbdFocusedId}"]`);
+  if(el){
+    el.classList.add('kbd-focused');
+    el.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
+}
+
+function getVisibleTasks(q){
+  const list = document.getElementById('l-' + q);
+  if(!list) return [];
+  return Array.from(list.querySelectorAll('.ti:not(.search-hidden):not(.filter-hidden)'))
+    .map(el => ({ id: el.dataset.id, q }));
+}
+function getAllVisibleInOrder(){
+  const out = [];
+  for(const q of Q){
+    const qEl = document.querySelector(`.quadrant[data-q="${q}"]`);
+    if(qEl && getComputedStyle(qEl).opacity === '0') continue;
+    out.push(...getVisibleTasks(q));
+  }
+  return out;
+}
+function navigateKbd(dir){
+  const all = getAllVisibleInOrder();
+  if(all.length === 0) return;
+  if(!kbdFocusedId){
+    kbdFocusedId = all[0].id; kbdFocusedQ = all[0].q;
+    highlightKbdFocused();
+    return;
+  }
+  const idx = all.findIndex(x => x.id === kbdFocusedId);
+  let newIdx = idx === -1 ? 0 : (idx + dir + all.length) % all.length;
+  kbdFocusedId = all[newIdx].id; kbdFocusedQ = all[newIdx].q;
+  highlightKbdFocused();
+}
+function navigateQuadrant(dir){
+  const idx = Q.indexOf(kbdFocusedQ);
+  const newQ = Q[(idx < 0 ? 0 : idx + dir + Q.length) % Q.length];
+  const tasks = getVisibleTasks(newQ);
+  if(tasks.length > 0){ kbdFocusedId = tasks[0].id; kbdFocusedQ = newQ; }
+  else { kbdFocusedId = null; kbdFocusedQ = newQ; }
+  highlightKbdFocused();
+}
+function getFocusedTask(){
+  if(!kbdFocusedId || !kbdFocusedQ) return null;
+  const t = tasks[kbdFocusedQ]?.find(x => x.id === kbdFocusedId);
+  if(!t) return null;
+  return { task: t, q: kbdFocusedQ, el: document.querySelector(`.ti[data-id="${kbdFocusedId}"]`) };
+}
+
+document.addEventListener('keydown', e => {
+  // Skip if slash menu is open (it handles its own keys)
+  if(slashCtx && slashMenu.classList.contains('show')) return;
+
+  const ae = document.activeElement;
+  const inF = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable);
+
+  // Alt+↑↓ reorder
+  if(e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
+    let tgt = hoveredTI;
+    if(!tgt && kbdFocusedId) tgt = document.querySelector(`.ti[data-id="${kbdFocusedId}"]`);
+    if(!tgt && ae && ae.tagName === 'TEXTAREA') tgt = ae.closest('.ti');
+    if(tgt){ e.preventDefault(); moveTask(tgt.dataset.q, tgt.dataset.id, e.key === 'ArrowUp' ? -1 : 1); return; }
+  }
+
+  if(e.metaKey || e.ctrlKey){
+    if(e.key === 'k'){ e.preventDefault(); moBg.classList.contains('show') ? closeMo() : openMo(); return; }
+    if(e.key === 'z' && !e.shiftKey){
+      if(inF && !moBg.classList.contains('show')) return;
+      e.preventDefault(); performUndo(); return;
+    }
+    if(e.key === 'p'){ e.preventDefault(); window.print(); return; }
+    if(e.key === 'b'){ e.preventDefault(); document.getElementById('dataBtn').click(); return; }
+    if(e.key === '/'){ e.preventDefault(); toggleSearch(); return; }
+    if(['1','2','3'].includes(e.key) && !inF){
+      const f = getFocusedTask();
+      if(f){ e.preventDefault(); moveToQuadrant(f.q, f.task.id, 'q'+e.key); return; }
+    }
+  }
+
+  if(e.key === 'Escape'){
+    if(moBg.classList.contains('show')){ closeMo(); return; }
+    if(setupBg.classList.contains('show')){ setupBg.classList.remove('show'); return; }
+    if(dataBg.classList.contains('show')){ dataBg.classList.remove('show'); return; }
+    if(helpBg.classList.contains('show')){ helpBg.classList.remove('show'); return; }
+    if(activeFilter){ setActiveFilter(null); return; }
+    if(searchBar.classList.contains('show')){ toggleSearch(); return; }
+    if(kbdFocusedId){ kbdFocusedId = null; kbdFocusedQ = null; highlightKbdFocused(); return; }
+  }
+
+  if(inF) return;
+
+  // Shift+1/2/3 → activate that quadrant's inline add row
+  if(e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey){
+    const codeMap = {Digit1:'q1', Digit2:'q2', Digit3:'q3'};
+    const targetQ = codeMap[e.code];
+    if(targetQ){
+      e.preventDefault();
+      document.querySelectorAll('.add-ghost.active').forEach(g => {
+        g.classList.remove('active');
+        g.innerHTML = `<span class="g-plus">+</span><span>New task</span>`;
+      });
+      const ghost = document.querySelector(`.add-ghost[data-q="${targetQ}"]`);
+      if(ghost){
+        ghost.closest('.quadrant')?.scrollIntoView({behavior:'smooth', block:'nearest'});
+        activateGhost(ghost);
+      }
+      return;
+    }
+  }
+
+  if(e.key === '/'){ e.preventDefault(); toggleSearch(); return; }
+  if(e.key === '?'){ e.preventDefault(); toggleHelp(); return; }
+  if(e.key === 'f'){ e.preventDefault(); toggleFocus(); return; }
+  if(e.key === 't'){ e.preventDefault(); document.getElementById('themeBtn').click(); return; }
+  if(e.key === 'n'){
+    // Focus the first ghost add row
+    e.preventDefault();
+    const ghost = document.querySelector('.add-ghost[data-q="' + (kbdFocusedQ || 'q1') + '"]');
+    if(ghost) activateGhost(ghost);
+    return;
+  }
+
+  if(e.key === 'j'){ e.preventDefault(); navigateKbd(1); return; }
+  if(e.key === 'k'){ e.preventDefault(); navigateKbd(-1); return; }
+  if(e.key === 'l'){ e.preventDefault(); navigateQuadrant(1); return; }
+  if(e.key === 'h'){ e.preventDefault(); navigateQuadrant(-1); return; }
+
+  const f = getFocusedTask();
+  if(!f) return;
+
+  if(e.key === 'x'){ e.preventDefault(); toggleComplete(f.task, f.q, f.el); return; }
+  if(e.key === 'e'){ e.preventDefault(); if(f.el && f.el._startEdit) f.el._startEdit(); return; }
+  if(e.key === 'o'){
+    e.preventDefault();
+    f.task.open = !f.task.open; save();
+    f.el.querySelector('.tdet').classList.toggle('open', f.task.open);
+    f.el.querySelector('.tarrow').classList.toggle('open', f.task.open);
+    if(f.task.open){
+      const ta = f.el.querySelector('[data-f="notes"]');
+      if(ta) requestAnimationFrame(()=> ta.focus());
+    }
+    return;
+  }
+  if(e.key === 'd'){ e.preventDefault(); deleteTask(f.task, f.q); return; }
+  if(e.key === 'p'){ e.preventDefault(); togglePin(f.task, f.q); return; }
+  if(e.key === 'm'){ e.preventDefault(); f.task.deliverable = !f.task.deliverable; save(); renderQ(f.q); updateSummary(); return; }
+  if(e.key === '/'){ e.preventDefault(); openSlashMenu(f.task, f.q, f.el, 'handle'); return; }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  URL params — Mac-wide shortcut integration
+// ═══════════════════════════════════════════════════════════════
+(function handleUrlParams(){
+  const p = new URLSearchParams(location.search);
+  if(p.get('quickadd') !== '1') return;
+  const text = p.get('text') || '';
+  const notes = p.get('notes') || '';
+  const q = p.get('q') || '';
+  const d = p.get('d') === '1';
+  const r = p.get('r') === '1';
+  const silent = p.get('silent') === '1';
+
+  if(silent && text.trim()){
+    const targetQ = Q.includes(q) ? q : (prefs.lastQ || 'q1');
+    const t = addTask(targetQ, text, notes, d, r);
+    if(t){
+      toast(`Added to ${Q_NAMES[targetQ]}`);
+      requestAnimationFrame(()=>{
+        const el = document.querySelector(`.ti[data-id="${t.id}"]`);
+        if(el){
+          el.classList.add('kbd-focused');
+          setTimeout(()=> el.classList.remove('kbd-focused'), 2000);
+        }
+      });
+    }
+  }else{
+    setTimeout(()=> openMo(text, notes, q, d, r), 200);
+  }
+  try{ history.replaceState({}, '', location.pathname); }catch{}
+})();
+
+(function handleFocusParam(){
+  const p = new URLSearchParams(location.search);
+  const fq = p.get('focus');
+  if(!fq || !Q.includes(fq)) return;
+  try{ history.replaceState({}, '', location.pathname); }catch{}
+  setTimeout(()=>{
+    const ghost = document.querySelector(`.add-ghost[data-q="${fq}"]`);
+    if(ghost) activateGhost(ghost);
+  }, 300);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('todayDate').textContent = fmtDate();
+renderAll();
+if(prefs.focusMode) toggleFocus(prefs.focusedQ);
+
+(function firstTimeHint(){
+  if(prefs.hintShown) return;
+  setTimeout(()=>{
+    toast(`Click + to add · ${IS_MAC?'⌘K':'Ctrl+K'} for quick add · ? for shortcuts`, 4500);
+    prefs.hintShown = true; savePrefs();
+  }, 800);
+})();
+
+</script>
+</body>
+</html>
