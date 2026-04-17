@@ -314,19 +314,18 @@ body.focus-mode .quadrant:not(.focused) .add-ghost{pointer-events:none}
   cursor:text;
 }
 .tarrow{
-  width:21px;height:21px;
+  width:24px;height:24px;
   display:inline-flex;align-items:center;justify-content:center;
-  color:var(--text-4);
   flex-shrink:0;margin-top:1px;
   cursor:pointer;
-  transition:transform var(--fade) var(--ease), color var(--fade) var(--ease);
-  font-size:13px;line-height:1;
+  transition:transform var(--fade) var(--ease), color var(--fade) var(--ease), -webkit-text-stroke var(--fade) var(--ease);
+  font-size:16px;line-height:1;
   border-radius:3px;
 }
-.tarrow:hover{color:var(--text-2);background:var(--hover-2)}
-.tarrow.has-notes{color:var(--text-2)}
+.tarrow.has-notes{color:var(--text-2);-webkit-text-stroke:0}
+.tarrow.empty{color:transparent;-webkit-text-stroke:1.5px var(--text-4)}
+.tarrow:hover{color:var(--text-2);-webkit-text-stroke:0;background:var(--hover-2)}
 .tarrow.open{transform:rotate(90deg)}
-.tarrow.empty{opacity:1;color:var(--text-4)}
 
 .tcb{
   width:15px;height:15px;border-radius:3px;
@@ -1686,7 +1685,7 @@ function mkTask(task, q){
 
   const hasNotes = task.notes && task.notes.trim();
   const arrowClass = 'tarrow' + (task.open ? ' open' : '') + (hasNotes ? ' has-notes' : ' empty');
-  const arrowChar = hasNotes ? '▶' : '▷';
+  const arrowChar = '▶';
 
   // Meta items
   const metaParts = [];
@@ -1864,8 +1863,8 @@ ${task.tags && task.tags.length ? `<div class="tdet-tags-row">${task.tags.map(t 
     // Update arrow color
     const ar = div.querySelector('.tarrow');
     if(ar){
-      if(task.notes.trim()){ ar.classList.remove('empty'); ar.classList.add('has-notes'); ar.textContent = '▶'; }
-      else{ ar.classList.remove('has-notes'); ar.classList.add('empty'); ar.textContent = '▷'; }
+      if(task.notes.trim()){ ar.classList.remove('empty'); ar.classList.add('has-notes'); }
+      else{ ar.classList.remove('has-notes'); ar.classList.add('empty'); }
     }
   });
   ta.addEventListener('focus', ()=>{ focId = task.id; });
